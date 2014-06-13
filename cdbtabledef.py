@@ -1,7 +1,7 @@
 """cdbtabledef.py
 
 Developer: Noelle Todd
-Last Updated: June 5, 2014
+Last Updated: June 13, 2014
 
 This module will create 4 tables for the client database, using the
 sqlalchemy module, and the sqlite database. This module is still in
@@ -22,25 +22,22 @@ session.configure(bind=engine)
 base = declarative_base()
 
 class Household(base):
-	"""
-	This class creates a table with columns for household data.
+	"""This class creates a table with columns for household data.
 	"""
 	__tablename__ = 'household'
-	id = Column(Integer, primary_key = True)
+	id = Column(Integer, primary_key=True)
 	street_address = Column(String)
 	apt = Column(String)
 	city = Column(String, default = 'Troy')
-	state = Column(String, default = 'NY')
+	state = Column(String(2), default = 'NY')
 	zip = Column(Integer, default = '12180')
-	#contact_ID = Column(Integer, ForeignKey('person.id'))
 	date_verified = Column(DateTime)
 	
 class Person(base):
-	"""
-	This class creates a table with columns for individual's data.
+	"""This class creates a table with columns for individual's data.
 	"""
 	__tablename__ = 'person'
-	id = Column(Integer, primary_key = True)
+	id = Column(Integer, primary_key=True)
 	first_name = Column(String)
 	last_name = Column(String)
 	DOB = Column(DateTime)
@@ -48,28 +45,28 @@ class Person(base):
 	phone = Column(Integer)
 	date_joined = Column(DateTime)
 	HH_ID = Column(Integer, ForeignKey('household.id'))
-	household = relationship(Household, backref=backref('members',
-														uselist = True))
+	household = relationship(Household, 
+				backref=backref('members', uselist=True,
+						passive_updates=False))
 		
 class Volunteer(base):
-	"""
-	This class creates a table with columns for volunteer data.
+	"""This class creates a table with columns for volunteer data.
 	"""
 	__tablename__ = 'volunteer'
-	id = Column(Integer, primary_key = True)
+	id = Column(Integer, primary_key=True)
 	first_name = Column(String)
 	last_name = Column(String)
 	phone = Column(Integer)
 	
 class Visit(base):
-	"""
-	This class creates a table with columns tracking visit history.
+	"""This class creates a table with columns tracking visit history.
 	"""
 	__tablename__ = 'visit'
-	id = Column(Integer, primary_key = True)
+	id = Column(Integer, primary_key=True)
 	I_ID = Column(Integer, ForeignKey('person.id'))
 	HH_ID = Column(Integer, ForeignKey('household.id'))
 	Vol_ID = Column(Integer, ForeignKey('volunteer.id'))
-	date = Column(DateTime, default = func.now())
+	date = Column(DateTime, default=func.now())
+	visit_notes = Column(String(256))
 
 base.metadata.create_all(engine)
