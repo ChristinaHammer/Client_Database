@@ -1,7 +1,7 @@
 """cdbfunctions.py
 
 Developer: Noelle Todd
-Last Updated: June 9, 2014
+Last Updated: June 16, 2014
 
 This module consists of helper functions which will be called by another
 module that will called directly by the user interface. This module is 
@@ -20,45 +20,85 @@ from cdbtabledef import Household, Person, Volunteer, Visit
 
 
 #Functions for inserts
-def insert_household(street, dateverified = None, Apt = None, City = 'Troy',
-					State = 'NY', Zip = '12180'):
+#Note: the argument 's' refers to the current session
+def insert_household(s, street, dateverified=None, Apt=None, City='Troy',
+					State='NY', Zip='12180'):
 	"""This function creates a new row to hold a household's data. It returns
 	the household id, which will be used when we insert household members.
 
 	"""
-	newhouse = Household(street_address = street, apt = Apt, city = City,
-						  state = State, zip = Zip, 
-						  date_verified = dateverified)
+	newhouse = Household(street_address=street, apt=Apt, city=City,
+						  state=State, zip=Zip, 
+						  date_verified=dateverified)
 	s.add(newhouse)
 	s.commit()
 	return newhouse.id
 			  
 	
-def insert_person(firstname, lastname, dob, datejoined, newhouse,
-				phonenum = None):
+def insert_person(s, firstname, lastname, dob, datejoined, newhouse,
+				phonenum=None):
 	"""This function creates a new row to hold an individual's data. There is
 	no return.
 	
 	"""
-	newpers = Person(first_name = firstname, last_name = lastname,
-					  DOB = dob, date_joined = datejoined, phone = phonenum)
+	newpers = Person(first_name=firstname, last_name=lastname,
+					  DOB=dob, date_joined=datejoined, phone=phonenum)
 	newpers.HH_ID = newhouse
 	newpers.age = age(dob)
 	s.add(newpers)
 	s.commit()
+	return newpers.id
 
 	
-def insert_volunteer(firstname, lastname, phonenum):
-	"""	This function creates a new row in the Volunteer table, to hold
+def insert_volunteer(s, firstname, lastname, phonenum):
+	"""This function creates a new row in the Volunteer table, to hold
 	a volunteer's data.
 	
 	"""
-	new_vol = Volunteer(first_name = firstname, last_name = lastname, 
-						phone = phonenum)
+	new_vol = Volunteer(first_name=firstname, last_name=lastname, 
+						phone=phonenum)
 	s.add(new_vol)
 	s.commit()
 	
+
+def insert_visit(s, Vol_id, pers_id, house_id, date_of_visit=datetime.now(),
+				notes=None):
+	"""This function creates a new row in the Visit table to hold
+	the data for a visit.
 	
+	"""
+	new_visit = Visit(I_ID=pers_id, HH_ID=house_id, Vol_ID=Vol_id,
+					date=date_of_visit, visit_notes=notes)
+	s.add(new_visit)
+	s.commit()
+	
+
+#functions for updating records
+def update_household(s, HH_ID, street, city, state, zip, apt=None,
+					date_verified=None):
+	"""This function will update a households records
+	"""
+	house = s.query(Household).filter(Household.id == HH_ID).one()
+	house.street = street
+	house.city = city
+	house.state = state
+	house.zip = zip
+	house.apt = apt
+	house.date_verified = date_verified
+	s.commit()
+	
+	
+def update_person(s, I_ID, firstname, lastname, dob):
+	"""This function will update a person's records.
+	"""
+	pers = s.query(Person).filter(Person.id == I_ID).one()
+	pers.first_name = firstname
+	pers.last_name = lastname
+	pers.DOB = dob
+	pers.age = age(dob)
+	s.commit()
+	
+
 def age(dob):
 	"""This function calculates a person's age using the dob input to it.
 	"""
