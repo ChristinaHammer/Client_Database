@@ -1,0 +1,132 @@
+#christina Hammer
+#client info page
+
+from tkinter import *
+#import newclientinter2
+
+
+def updateinfo():
+    #add actual info to here!
+    print ('Changes have been saved!')
+    return
+
+def addnewhm():
+    
+    Label(gridframe, text=' ').grid(row=17,column=0)
+
+    Label(gridframe, text="First Name: ").grid(column=0, sticky=E)
+    Entry(gridframe).grid(row=18, column=1)
+    
+
+    Label(gridframe, text='Last Name: ').grid(column=2,sticky=E)
+    Entry(gridframe).grid(row=18,column=3)
+
+    Label(gridframe, text='DOB: ').grid(column=4,sticky=E)
+    Entry(gridframe).grid(column=5)
+
+    Label(gridframe, text='Age: ').grid(column=6,sticky=E)
+    Label(gridframe, text='##').grid(column=7,sticky=W)
+
+
+    return
+    
+ciGui=Tk()
+
+ciGui.geometry('1200x800+400+200')
+
+#ciGui.configure(background='blue')
+
+ciGui.title('Client Information')
+
+topframe=Frame(ciGui).grid(row=0,column=0)
+
+##Client Info
+toptitle=Label(topframe,text='Client Information', font=("Helvetica", 16)).grid(row=0,column=0,columnspan=2, sticky=W)
+
+gridframe=Frame(ciGui).grid()
+
+Label(gridframe, text=' ').grid(row=1,column=0)
+
+Label(gridframe, text="First Name: ").grid(row=2, column=0, sticky=E)
+fname = Entry(gridframe).grid(row=2, column=1)
+#prefill with client name from db
+
+Label(gridframe, text='Last Name: ').grid(row=2,column=2,sticky=E)
+lname=Entry(gridframe).grid(row=2,column=3)
+
+Label(gridframe, text='DOB: ').grid(row=2,column=4,sticky=E)
+lname=Entry(gridframe).grid(row=2,column=5)
+
+
+Label(gridframe, text='Age: ').grid(row=2,column=6,sticky=E)
+Label(gridframe, text='##').grid(row=2,column=7,sticky=W) #will be obtained from search functions
+
+Label(gridframe, text='   ').grid(row=3,column=0,sticky=E)
+
+Label(gridframe, text='Notes: ').grid(row=4,column=0,sticky=E)
+Label(gridframe, text='Last Visit: ').grid(row=4,column=5,sticky=E)
+lastvisit=Entry(gridframe).grid(row=4, column=6)
+
+
+notes=Entry(gridframe, width=100).grid(row=4,column=1,columnspan=4)
+Label(gridframe, text='   ').grid(row=5,column=0,sticky=E)
+
+
+Button(gridframe,text='Update Information',command=updateinfo).grid(row=6, column=1)
+
+Label(gridframe, text='   ').grid(row=7,column=0,sticky=E)
+
+##Household Info
+Label(gridframe,text='Household Information', font=("Helvetica", 16)).grid(row=8,column=0,columnspan=2, sticky=W)
+
+Label(gridframe, text='   ').grid(row=9,column=0,sticky=E)
+
+Label(gridframe, text='Address: ').grid(row=10,column=0,sticky=E)
+address=Entry(gridframe,width=80).grid(row=10, column=1,columnspan=3)
+
+Label(gridframe, text='Apt: ').grid(row=10,column=4,sticky=E)
+aptn=Entry(gridframe,width=10).grid(row=10,column=5)
+
+Label(gridframe, text='City: ').grid(row=10,column=6,sticky=E)
+city=Entry(gridframe).grid(row=10,column=7)
+
+Label(gridframe, text='   ').grid(row=11,column=0,sticky=E)
+
+Label(gridframe, text='State: ').grid(row=12,column=0,sticky=E)
+state=Entry(gridframe).grid(row=12,column=1)
+
+Label(gridframe, text='Zip Code: ').grid(row=12,column=2,sticky=E)
+zipc=Entry(gridframe).grid(row=12, column=3)
+
+Label(gridframe, text='Phone: ').grid(row=12, column=4)
+phone=Entry(gridframe).grid(row=12, column=5)
+
+Label(gridframe, text='   ').grid(row=13,column=0,sticky=E)
+
+Button(gridframe,text='Update Information',command=updateinfo).grid(row=14, column=1)
+
+Label(gridframe, text='   ').grid(row=15,column=0,sticky=E)
+
+##Household Members
+Label(gridframe,text='Household Members', font=("Helvetica", 16)).grid(row=16,column=0,columnspan=2, sticky=W)
+
+Label(gridframe, text=' ').grid(row=17,column=0)
+
+Label(gridframe, text="First Name: ").grid(row=18, column=0, sticky=E)
+fname = Entry(gridframe).grid(row=18, column=1)
+#prefill with client name from db
+
+Label(gridframe, text='Last Name: ').grid(row=18,column=2,sticky=E)
+lname=Entry(gridframe).grid(row=18,column=3)
+
+Label(gridframe, text='DOB: ').grid(row=18,column=4,sticky=E)
+lname=Entry(gridframe).grid(row=18,column=5)
+
+Label(gridframe, text='Age: ').grid(row=18,column=6,sticky=E)
+Label(gridframe, text='##').grid(row=18,column=7,sticky=W)
+
+Button(gridframe,text='Add New Household Member',command=addnewhm).grid(row=20, column=1)
+
+#Label(gridframe, text='').grid(row=,column=,sticky=W)
+ciGui.mainloop()
+
