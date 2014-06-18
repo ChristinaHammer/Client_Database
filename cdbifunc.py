@@ -1,7 +1,7 @@
 """cdbifunc.py
 
 Developer: Noelle Todd
-Last Updated: June 9, 2014
+Last Updated: June 18, 2014
 
 This module holds all functions that will be called directly by the user
 interface. This module uses several functions in cdbfunctions.py; the two
@@ -48,38 +48,60 @@ def reset(I_ID):
 	info = select_client(I_ID)
 	return info
 
+
+def new_volunteer(s, firstname, lastname, phonenum=None):
+	"""This function creates a new record for a volunteer.
+	"""
+	insert_volunteer(s, firstname, lastname, phonenum)
 	
-def new_client(firstname, lastname, dob, datejoined, street,
-				dateverified = None, phonenum = None, Apt = None,
-				City = 'Troy', State = 'NY', Zip = '12180'):
-	"""This function creates a new person, household, and first visit.
+	
+def new_client(Vol_ID, street, client_data_tuple_list, 
+		dateJoined=datetime.now(), dateVerified=None,
+		visitDate=datetime.now(), Apt=None,
+		City='Troy', State='NY', Zip='12180', notes=None
+		):
+	"""Input:
+	new_client(int Vol_ID, string street, 
+			list[(string fname, string lname, date dob, int phone)],
+			date dateJoined, date dateVerified, date visitDate, string Apt,
+			string City, string State, int Zip, string Notes)
+				
+	This function creates a new person, household, and first visit.
 	If the page viewed is for a new_client, then this connects to the SAVE
 	button in the interface.
 	
-	For input, the function takes lists of strings for firstname and lastname, 
-	a list of date objects for dob, a list of integers for phonenum, strings
-	for Apt, City, and State, and an integer for Zip. There is no return.
+	For input, the function takes lists of strings for firstnames and 
+	lastnames, a list of date objects for dobs, a list of integers for
+	phonenums, strings for Apt, City, and State, and an integer for Zip.
+	There is no return.
 	
 	"""
 	
 	#create new household
-	newhouse = insert_household(street, dateverified, Apt, City, State, Zip)
+	newhouse = insert_household(s, street, dateVerified,
+								Apt, City, State, Zip)
 	
 	#create new person for every household member
-	if type(firstname) == list:
-		membersum = len(firstname) #finds length of list of names
-		for i in range(0, membersum):
-			insert_person(firstname[i], lastname[i], dob[i], datejoined,
-						newhouse)
-	else:
-		insert_person(firstname, lastname, dob, datejoined, newhouse,
-					phonenum)
-
-	#Additions:
-	#	Can we make the input any simpler?
-	#	How do we deal with multiple phone numbers?
-	#	Create a new visit.
+	data = client_data_tuple_list #variable renamed for simplicity	
 	
+	for i in range(0, len(data)):			
+		fname = data[i][0]
+		lname = data[i][1]
+		dob = data[i][2]
+		
+		#check for phone number
+		if len(data[i]) > 3: phone = data[i][3]
+		else: phone = None
+		pers = insert_person(s, fname, lname, dob, dateJoined, newhouse, phone)
+		
+		#the first person is the actual visitor; save for insert_visit
+		if i == 0:
+			s.commit()
+			newpers = pers
+	s.commit()
+	
+	#create new visit for household
+	insert_visit(s, Vol_ID, newpers, newhouse, visitDate, notes)	
 	s.commit()
 	
 	
@@ -106,13 +128,22 @@ def select_client(I_ID):
 
 #Function for drop-down, selection menu
 def list_people():
-	"""This function returns a list of all people in the database, sorted in
-	alphabetic order by last name. This will also return the id of the person,
-	which should not be displayed, but will be used for selection purposes.
+	"""This function takes no arguments and returns a list of tuples.
+	Each tuple contains a string for a person's full name, a string for
+	the person's street_address, and an integer for the person's unique id.
+	
 	"""
 	people = []
+	
+	#create a list of tuples, where each tuple contains a string holding a 
+	#person's full-name, a string holding the person's street, and an integer
+	#holding the person's unique id. The names are added in alphabetic (A-Z)
+	#order.
+	#
 	for instance in s.query(Person).order_by(Person.last_name):
-		people.append((instance.first_name, instance.last_name, instance.id))
-		#also return street_address
+		h = s.query(Household).filter(Household.id == instance.HH_ID).one()
+		fullname = instance.first_name + " " + instance.last_name
+		people.append((fullname, h.street_address, instance.id))
+		
 	return people
 	
