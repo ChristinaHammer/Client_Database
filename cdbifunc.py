@@ -62,9 +62,9 @@ def new_client(Vol_ID, street, client_data_tuple_list,
 		):
 	"""Input:
 	new_client(int Vol_ID, string street, 
-			list[(string fname, string lname, date dob, int phone)],
-			date dateJoined, date dateVerified, date visitDate, string Apt,
-			string City, string State, int Zip, string Notes)
+		list[(string fname, string lname, date dob, int phone)],
+		date dateJoined, date dateVerified, date visitDate, string Apt,
+		string City, string State, int Zip, string Notes)
 				
 	This function creates a new person, household, and first visit.
 	If the page viewed is for a new_client, then this connects to the SAVE
@@ -79,7 +79,7 @@ def new_client(Vol_ID, street, client_data_tuple_list,
 	
 	#create new household
 	newhouse = insert_household(s, street, dateVerified,
-								Apt, City, State, Zip)
+				Apt, City, State, Zip)
 	
 	#create new person for every household member
 	data = client_data_tuple_list #variable renamed for simplicity	
@@ -96,13 +96,66 @@ def new_client(Vol_ID, street, client_data_tuple_list,
 		
 		#the first person is the actual visitor; save for insert_visit
 		if i == 0:
-			s.commit()
+			#s.commit()
 			newpers = pers
-	s.commit()
+	#s.commit()
 	
 	#create new visit for household
 	insert_visit(s, Vol_ID, newpers, newhouse, visitDate, notes)	
-	s.commit()
+	#s.commit()
+	
+	
+def update_all(Vol_ID, I_ID, street, client_data_tuple_list, 
+		new_client_list=None, visitDate=datetime.now(),
+		dateVerified = None, apt = None,	city = 'Troy',
+		state = 'NY', zip = '12180', notes=None):
+	"""Input:
+	update_all(int Vol_ID, int I_ID, string street, 
+		list[(int id, string fname, string lname, date dob, int phone)],
+		list[string fname, string lname, data dob, int phone)],
+		date visitDate, date dateVerified, string apt,
+		string city, string state, int zip, string notes)
+				
+	This function will update a household and all members in the household,
+	add any new members, and create a new visit record.
+	"""
+	pers = s.query(Person).filter(Person.id == I_ID).one()
+	house = s.query(Household).filter(Household.id == pers.HH_ID).one()
+	
+	#update household
+	update_household(s, house.id, street, city, state,
+					zip, apt, dateVerified)
+	
+	#add new clients (if they exist)
+	ncl = new_client_list #renamed for simplicity
+	if ncl == None: pass
+	else:
+		for i in range(0, len(ncl)):
+			fname = ncl[i][0]
+			lname = ncl[i][1]
+			dob = ncl[i][2]
+			
+			#check for phone number
+			if len(ncl[i]) > 3: pho = ncl[i][3]
+			else: pho = None
+			newpers = insert_person(s, fname, lname, dob, house.id, phonenum=pho)
+	
+	#update old clients
+	ctl = client_data_tuple_list #renamed for simplicity
+	for i in range(0, len(ctl)):
+		iid = ctl[i][0]
+		fname = ctl[i][1]
+		lname = ctl[i][2]
+		dob = ctl[i][3]
+		
+		#check for phone number
+		if len(ctl[i]) > 4: pho = ctl[i][4]
+		else: pho = None
+		update_person(s, iid, fname, lname, dob, phonenum=pho)
+		
+	
+	#create a new visit	
+	insert_visit(s, Vol_ID, pers.id, house.id, visitDate, notes)
 	
 	
 #Function to retrieve all data for a client
