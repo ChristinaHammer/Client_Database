@@ -1,0 +1,233 @@
+#christina Hammer
+#client info page
+
+from tkinter import *
+
+
+from sqlalchemy import Column, DateTime, String, Integer, ForeignKey, func
+from sqlalchemy.orm import relationship, backref
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from datetime import datetime, timedelta, date
+from cdbtabledef import Household, Person, Volunteer, Visit
+from cdbfunctions import *
+from cdbifunc import *
+
+def hhupdateinfo(s, HH_ID, street, city, state, zp, apt):
+    date_verified=date.today()
+    update_household(s, HH_ID, street, city, state, zp, apt,date_verified)
+    print ('Changes have been saved!')
+    return
+
+def clupdateinfo(s, I_ID, firstname, lastname, dob):
+    update_person(s, I_ID, firstname, lastname, dob)
+    print ('Changes have been saved!')
+    return
+
+
+def addnewhm(s, newhouse,phonenum):
+
+    
+    
+    Label(gridframe, text=' ').grid(row=99,column=0)
+
+    Label(gridframe, text="First Name: ").grid(row=100,column=0, sticky=E)
+    fentry=Entry(gridframe)
+    fentry.grid(row=100, column=1)
+    f=fentry.get()
+
+    Label(gridframe, text='Last Name: ').grid(row=100,column=2,sticky=E)
+    lentry=Entry(gridframe)
+    lentry.grid(row=100,column=3)
+    l=lentry.get()
+    
+    Label(gridframe, text='DOB: ').grid(row=100,column=4,sticky=E)
+    dbentry=Entry(gridframe)
+    dbentry.grid(row=100,column=5)
+    db=dbentry.get()
+
+    Label(gridframe, text='Age: ').grid(row=100,column=6,)
+    Label(gridframe, text='##').grid(row=100,column=7,sticky=W)
+
+    datejoined=date.today()
+    
+    insert_person(s, f, l, db,datejoined , newhouse,phonenum)
+    print ('Household Member Added!')
+    return
+
+def visitrecord(s, Vol_id, pers_id, house_id, notes):
+    date_of_visit=datetime.now()
+    
+    insert_visit(s, Vol_id, pers_id, house_id, date_of_visit,notes)
+    print ("Visit Sucessfully Recorded!")
+    return
+
+ciGui=Tk()
+
+ciGui.geometry('1200x800+400+200')
+
+#ciGui.configure(background='blue')
+
+ciGui.title('Client Information')
+
+
+topframe=Frame(ciGui).grid(row=0,column=0)
+
+####################Client Info Members#####################################
+toptitle=Label(topframe,text='Client Information', font=("Helvetica", 16),fg='white',bg='gray52').grid(row=0,column=0,columnspan=8, sticky=W)
+
+gridframe=Frame(ciGui).grid()
+
+Label(gridframe, text=' ').grid(row=1,column=0)
+
+Label(gridframe, text="First Name: ").grid(row=2, column=0, sticky=E)
+fname = Entry(gridframe)
+fname.grid(row=2, column=1)
+fn=fname.get()
+
+Label(gridframe, text='Last Name: ').grid(row=2,column=2,sticky=E)
+lname=Entry(gridframe)
+lname.grid(row=2,column=3)
+ln=lname.get()
+
+Label(gridframe, text='DOB: ').grid(row=2,column=4,sticky=E)
+dob=Entry(gridframe)
+dob.grid(row=2,column=5)
+db=dob.get()
+
+Label(gridframe, text='Age: ').grid(row=2,column=6,sticky=E)
+Label(gridframe, text='##').grid(row=2,column=7,sticky=W) #will be obtained from search functions
+
+Label(gridframe, text='   ').grid(row=3,column=0,sticky=E)
+
+s=2
+I_ID=1201
+
+Button(gridframe,text='Update Information',command=clupdateinfo(s, I_ID, fn, ln, db)).grid(row=6, column=1)
+
+Label(gridframe, text='   ').grid(row=7,column=0,sticky=E)
+
+####################Household Info#####################################
+Label(gridframe,text='Household Information', font=("Helvetica", 16),fg='white', bg='gray52').grid(row=8,column=0,columnspan=8, sticky=W)
+
+Label(gridframe, text='   ').grid(row=9,column=0,sticky=E)
+
+Label(gridframe, text='Address: ').grid(row=10,column=0,sticky=E)
+address=Entry(gridframe,width=80)
+address.grid(row=10, column=1,columnspan=3)
+st=address.get()
+
+
+Label(gridframe, text='Apt: ').grid(row=10,column=4,sticky=E)
+aptn=Entry(gridframe,width=10)
+aptn.grid(row=10,column=5)
+apt=aptn.get()
+
+Label(gridframe, text='City: ').grid(row=10,column=6,sticky=E)
+city=Entry(gridframe)
+city.grid(row=10,column=7)
+c=city.get()
+
+Label(gridframe, text='   ').grid(row=11,column=0,sticky=E)
+
+Label(gridframe, text='State: ').grid(row=12,column=0,sticky=E)
+state=Entry(gridframe)
+state.grid(row=12,column=1)
+sta=state.get()
+
+Label(gridframe, text='Zip Code: ').grid(row=12,column=2,sticky=E)
+zipc=Entry(gridframe)
+zipc.grid(row=12, column=3)
+z=zipc.get()
+
+Label(gridframe, text='Phone: ').grid(row=12, column=4)
+phone=Entry(gridframe)
+phone.grid(row=12, column=5)
+ph=phone.get()
+
+s=3
+HH_ID=1300
+Button(gridframe,text='Update Information',command=hhupdateinfo(s, HH_ID,st,c,sta,z,apt)).grid(row=13, column=1)
+
+Label(gridframe, text='   ').grid(row=14,column=0,sticky=E)
+
+####################Visit Info#####################################
+
+Label(gridframe,text='Visit Information', font=("Helvetica", 16),fg='white', bg='gray52').grid(row=15,column=0,columnspan=8, sticky=W)
+Label(gridframe, text='   ').grid(row=16,column=0,sticky=E)
+
+Label(gridframe, text='Date of Last Visits:',font=16).grid(row=17,column=0)
+Label(gridframe, text='Notes:',font=14).grid(row=17,column=1)
+Label(gridframe, text='Volunteer: ',font=14).grid(row=17, column=7, sticky=W)
+
+Label(gridframe, text='   ').grid(row=18,column=0,sticky=E)
+
+Label(gridframe, text='4/5/2014').grid(row=19,column=0)
+Label(gridframe, text='5/7/2014').grid(row=20,column=0)
+Label(gridframe, text='6/4/2014').grid(row=21,column=0)
+
+Label(gridframe, text='NOTESNOTESNOTES OMG NOTESNOTESNOTES MORE MILK NOTESNOTES').grid(row=19,column=1, columnspan=5)
+Label(gridframe, text='such food many eat so charity very pantry wow').grid(row=20,column=1, columnspan=5)
+Label(gridframe, text='The oldest tree is 5063 years old, which is crazy').grid(row=21,column=1, columnspan=5)
+
+Label(gridframe, text='Henry Kissinger').grid(row=19,column=7)
+Label(gridframe, text='Justin Robert YOung').grid(row=20,column=7)
+Label(gridframe, text='Brian Brushwood').grid(row=21,column=7)
+
+'''
+currentvisit=Entry(gridframe)
+currentvisit.grid(row=21,column=0,sticky=E)
+#cvd=currentvisit.get()
+#cvd.split('/')
+
+#cvdateobj=date(cvd[2],cvd[1],cvd[0])
+'''
+
+Label(gridframe, text='   ').grid(row=22,column=0,sticky=E)
+
+Label(gridframe, text='Notes for current visit: ').grid(row=23,column=0)
+notescv=Entry(gridframe, width=80)
+notescv.grid(row=24, column=0, columnspan=5,sticky=E)
+notes=notescv.get()
+
+Label(gridframe, text='Volunteer ID: ').grid(row=23, column=7)
+volun=Entry(gridframe)
+volun.grid(row=24, column=7, columnspan=4,sticky=E)
+vnt=volun.get()
+
+Label(gridframe, text='   ').grid(row=25,column=0,sticky=E)
+
+#Variables full of lies--- default for now until I figure out how to grab information from db
+HH_ID=1100
+s=1
+pers_id=1101
+
+Button(gridframe,text='Record Visit',command=visitrecord(s, vnt, pers_id,HH_ID,notes)).grid(row=26, column=1)
+Label(gridframe, text='   ').grid(row=27,column=0,sticky=E)
+
+####################Household Members#####################################
+Label(gridframe,text='Household Members', font=("Helvetica", 16),fg='white',bg='gray52').grid(row=28,column=0,columnspan=8, sticky=W)
+
+Label(gridframe, text=' ').grid(row=29,column=0)
+
+Label(gridframe, text="First Name: ").grid(row=30, column=0, sticky=E)
+fname = Entry(gridframe).grid(row=30, column=1)
+#prefill with client name from db
+
+Label(gridframe, text='Last Name: ').grid(row=30,column=2,sticky=E)
+lname=Entry(gridframe).grid(row=30,column=3)
+
+Label(gridframe, text='DOB: ').grid(row=30,column=4,sticky=E)
+lname=Entry(gridframe).grid(row=30,column=5)
+
+Label(gridframe, text='Age: ').grid(row=30,column=6,)
+Label(gridframe, text='##').grid(row=30,column=7,sticky=W)
+
+Label(gridframe, text='   ').grid(row=31,column=0,sticky=E)
+
+Button(gridframe,text='Add New Household Member',command=addnewhm(s, HH_ID,ph)).grid(row=32, column=1)
+
+#Label(gridframe, text='').grid(row=,column=,sticky=W)
+
+ciGui.mainloop()
