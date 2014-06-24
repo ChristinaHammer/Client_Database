@@ -1,7 +1,7 @@
 """cdbifunc.py
 
 Developer: Noelle Todd
-Last Updated: June 18, 2014
+Last Updated: June 24, 2014
 
 This module holds all functions that will be called directly by the user
 interface. This module uses several functions in cdbfunctions.py; the two
@@ -55,54 +55,75 @@ def new_volunteer(s, firstname, lastname, phonenum=None):
 	insert_volunteer(s, firstname, lastname, phonenum)
 	
 	
-def new_client(Vol_ID, street, client_data_tuple_list, 
-		dateJoined=datetime.now(), dateVerified=None,
-		visitDate=datetime.now(), Apt=None,
-		City='Troy', State='NY', Zip='12180', notes=None
-		):
-	"""Input:
-	new_client(int Vol_ID, string street, 
-		list[(string fname, string lname, date dob, int phone)],
-		date dateJoined, date dateVerified, date visitDate, string Apt,
-		string City, string State, int Zip, string Notes)
-				
-	This function creates a new person, household, and first visit.
-	If the page viewed is for a new_client, then this connects to the SAVE
-	button in the interface.
+#formerly new_client function; renamed for clarity
+def new_household(houseInfo, visitInfo, newClientInfo_list):
+	"""This function takes an object for house info, an object for
+	visit info, and a list of objects for client info (one object per
+	client).
 	
-	For input, the function takes lists of strings for firstnames and 
-	lastnames, a list of date objects for dobs, a list of integers for
-	phonenums, strings for Apt, City, and State, and an integer for Zip.
-	There is no return.
+	This function creates a new record for each new person, a new record
+	for the household, and new record for the a visit.
 	
 	"""
-	
 	#create new household
-	newhouse = insert_household(s, street, dateVerified,
-				Apt, City, State, Zip)
+	newhouse = insert_household(s, houseInfo.street, houseInfo.dateVerified,
+					houseInfo.apt, houseInfo.city,
+					houseInfo.state, houseInfo.zip)
 	
 	#create new person for every household member
-	data = client_data_tuple_list #variable renamed for simplicity	
+	data = newClientInfo_list #variable renamed for simplicity	
 	
 	for i in range(0, len(data)):			
-		fname = data[i][0]
-		lname = data[i][1]
-		dob = data[i][2]
+		fname = data[i].firstname
+		lname = data[i].lastname
+		dob = data[i].dob
+		phone = data[i].phone
+		dateJoined = data[i].dateJoined
 		
-		#check for phone number
-		if len(data[i]) > 3: phone = data[i][3]
-		else: phone = None
-		pers = insert_person(s, fname, lname, dob, dateJoined, newhouse, phone)
+		pers = insert_person(s, data[i].firstname, data[i].lastname,
+					data[i].dob, newhouse, data[i].dateJoined,
+					data[i].phone)
 		
 		#the first person is the actual visitor; save for insert_visit
 		if i == 0:
-			#s.commit()
 			newpers = pers
-	#s.commit()
 	
 	#create new visit for household
-	insert_visit(s, Vol_ID, newpers, newhouse, visitDate, notes)	
-	#s.commit()
+	insert_visit(s, visitInfo.Vol_ID, newpers, newhouse, 
+			visitInfo.visitDate, visitInfo.notes)	
+				
+				
+def update_all(I_ID, houseInfo, visitInfo, oldClientInfo_list, 
+		newClientInfo_list=None):
+				
+	pers = s.query(Person).filter(Person.id == I_ID).one()
+	house = s.query(Household).filter(Household.id == pers.HH_ID).one()
+	
+	#update household
+	update_household(s, house.id, houseInfo.street, houseInfo.city, 
+			houseInfo.state, houseInfo.zip, houseInfo.apt,
+			houseInfo.dateVerified)
+	
+	#add new clients (if they exist)
+	data = newClientInfo_list #renamed for simplicity
+	if data == None: pass
+	else:
+		for i in range(0, len(data)):
+			newpers = insert_person(s, data[i].firstname, data[i].lastname,
+						data[i].dob, house.id, 
+						phonenum=data[i].phone)
+	
+	#update old clients
+	old = oldClientInfo_list #renamed for simplicity
+	for i in range(0, len(old)):
+		update_person(s, old[i].id, old[i].firstname, old[i].lastname, 
+				old[i].dob, old[i].phone)
+		
+	
+	#create a new visit	
+	insert_visit(s, visitInfo.Vol_ID, pers.id, house.id, visitInfo.visitDate,
+			visitInfo.notes)
+	
 	
 	
 def update_all(Vol_ID, I_ID, street, client_data_tuple_list, 
@@ -124,7 +145,7 @@ def update_all(Vol_ID, I_ID, street, client_data_tuple_list,
 	
 	#update household
 	update_household(s, house.id, street, city, state,
-					zip, apt, dateVerified)
+			zip, apt, dateVerified)
 	
 	#add new clients (if they exist)
 	ncl = new_client_list #renamed for simplicity
