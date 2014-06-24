@@ -1,7 +1,7 @@
 """cdbtabledef.py
 
 Developer: Noelle Todd
-Last Updated: June 13, 2014
+Last Updated: June 24, 2014
 
 This module will create 4 tables for the client database, using the
 sqlalchemy module, and the sqlite database. This module is still in
@@ -42,7 +42,7 @@ class Person(base):
 	last_name = Column(String)
 	DOB = Column(DateTime)
 	age = Column(Integer)
-	phone = Column(Integer)
+	phone = Column(String)
 	date_joined = Column(DateTime)
 	HH_ID = Column(Integer, ForeignKey('household.id'))
 	household = relationship(Household, 
@@ -56,7 +56,7 @@ class Volunteer(base):
 	id = Column(Integer, primary_key=True)
 	first_name = Column(String)
 	last_name = Column(String)
-	phone = Column(Integer)
+	phone = Column(String)
 	
 class Visit(base):
 	"""This class creates a table with columns tracking visit history.
