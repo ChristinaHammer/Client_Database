@@ -1,7 +1,7 @@
 """cdbfunctions.py
 
 Developer: Noelle Todd
-Last Updated: June 16, 2014
+Last Updated: June 24, 2014
 
 This module consists of helper functions which will be called by another
 module that will called directly by the user interface. This module is 
@@ -17,6 +17,44 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 from cdbtabledef import Household, Person, Volunteer, Visit
+
+
+#objects to hold data for function calls
+class newClientData:
+	def __init__(self, firstname, lastname, dob, phone=None,
+				dateJoined=datetime.now()):
+		self.firstname = str(firstname)
+		self.lastname = str(lastname)
+		self.dob = dob
+		self.phone = str(phone)
+		self.dateJoined = dateJoined
+
+class oldClientData:
+	def __init__(self, id, firstname, lastname, dob, phone=None,
+				dateJoined=datetime.now()):
+		self.id = id
+		self.firstname = str(firstname)
+		self.lastname = str(lastname)
+		self.dob = dob
+		self.phone = str(phone)
+		self.dateJoined = dateJoined
+
+class houseData:
+	def __init__(self, street, city='Troy', state='NY', zip='12180', 
+				dateVerified=None, apt=None):
+		self.street = street
+		self.city = city
+		self.state = state
+		self.zip = zip
+		self.dateVerified = dateVerified
+		self.apt = apt
+		
+class visitData:
+	def __init__(self, Vol_ID, visitDate=datetime.now(), notes=None):
+		self.Vol_ID = Vol_ID
+		self.visitDate = visitDate
+		self.notes = notes
+		
 
 
 #Functions for inserts
