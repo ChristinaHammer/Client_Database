@@ -1,7 +1,7 @@
 """cdbifunc.py
 
 Developer: Noelle Todd
-Last Updated: June 24, 2014
+Last Updated: June 26, 2014
 
 This module holds all functions that will be called directly by the user
 interface. This module uses several functions in cdbfunctions.py; the two
@@ -18,7 +18,6 @@ from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 from cdbtabledef import Household, Person, Volunteer, Visit
 from cdbfunctions import *
-from sqlafuntest import *
 
 engine = create_engine('sqlite:///test_db.sqlite')
 session = sessionmaker()
@@ -48,6 +47,120 @@ def reset(I_ID):
 	info = select_client(I_ID)
 	return info
 
+
+#Function for drop-down, selection menu
+def list_people():
+	"""This function takes no arguments and returns a list of tuples.
+	Each tuple contains a string for a person's full name, a string for
+	the person's street_address, and an integer for the person's unique id.
+	
+	"""
+	people = []
+	
+	#create a list of tuples, where each tuple contains a string holding a 
+	#person's full-name, a string holding the person's street, and an integer
+	#holding the person's unique id. The names are added in alphabetic (A-Z)
+	#order.
+	#
+	for instance in s.query(Person).order_by(Person.last_name):
+		h = s.query(Household).filter(Household.id == instance.HH_ID).one()
+		fullname = instance.first_name + " " + instance.last_name
+		people.append((fullname, h.street_address, instance.id))
+		
+	return people
+	
+#Function to retrieve all data for a client
+#Two versions of this function are in this module until it is determined which one
+#is the most consistent and easy to use.
+#
+
+#Version 1:
+"""
+def select_client(I_ID):
+	This function returns all client data for a selected client.
+	
+	#find person and associated household
+	pers = s.query(Person).filter(Person.id == I_ID).one()	
+	house = s.query(Household).filter(Household.id == pers.HH_ID).one()
+	
+	#update person's age in database
+	pers.age = age(pers.DOB)
+	s.commit()
+	
+	#create list of all info, listing the individual's info in a tuple in 
+	#the first position.
+	#
+	info = [(pers.id, pers.first_name, pers.last_name, pers.DOB, pers.age,
+			pers.phone), pers.date_joined, house.street_address, house.apt,
+			house.city, house.state, house.zip, house.date_verified]
+	
+	#append all other members' info, where each member has its own tuple,
+	#to the end of the list.
+	#
+	for member in house.members:
+		if member.first_name == pers.first_name: pass
+		else:
+			#update member's age in database
+			member.age = age(member.DOB)
+			s.commit()
+			#add member's data to list
+			info.append((member.id, member.first_name, member.last_name,
+						member.DOB, member.age, member.phone))
+	
+	#append the age dictionary to the end of the list
+	agegroups = get_age_breakdown(house.members)
+	info.append(agegroups)
+	
+	visits = list_visits(s, I_ID)
+	info.append(visits)
+	
+	return info
+"""
+
+
+#Version 2:
+def select_client(I_ID):
+	"""This a dictionary of objects containing all data for a selected
+	client.
+	"""
+	#find person and associated household
+	pers = s.query(Person).filter(Person.id == I_ID).one()	
+	house = s.query(Household).filter(Household.id == pers.HH_ID).one()
+	
+	#create new object to hold visitor's data
+	visitor = oldClientData(id=pers.id, firstname=pers.first_name,
+				lastname=pers.last_name, dob=pers.DOB,
+				phone=pers.phone, dateJoined=pers.date_joined)
+	
+	#create new object to hold household data
+	household = houseData(street=house.street_address, city=house.city,
+				state=house.state, zip=house.zip, 
+				dateVerified=house.date_verified, apt=house.apt)
+							
+	#list to hold member-data objects
+	members = []
+	
+	#create new objects to hold data for each additional household member
+	for member in house.members:
+		if member.first_name == pers.first_name: pass
+		else:
+			mem = oldClientData(id=member.id, firstname=member.first_name,
+						lastname=member.last_name, dob=member.DOB,
+						phone=member.phone,
+						dateJoined=member.date_joined)
+			members.append(mem)
+			
+	#get list of information about past 3 visits
+	visits = list_visits(s, I_ID)
+	
+	#call to function to get dictionary of ages
+	agegroups = get_age_breakdown(house.members)
+	
+	#create dictionary of all objects to be returned
+	info = {"visitor":visitor, "household":household, "member_list":members,
+			"visit_list":visits, "agegroup_dict":agegroups}
+	return info
+	
 
 def new_volunteer(s, firstname, lastname, phonenum=None):
 	"""This function creates a new record for a volunteer.
@@ -95,6 +208,11 @@ def new_household(houseInfo, visitInfo, newClientInfo_list):
 				
 def update_all(I_ID, houseInfo, visitInfo, oldClientInfo_list, 
 		newClientInfo_list=None):
+	"""This function will update all records for a household and members
+	of a household. A new record for a visit and new records for any new
+	household members will also be created.
+	
+	"""
 				
 	pers = s.query(Person).filter(Person.id == I_ID).one()
 	house = s.query(Household).filter(Household.id == pers.HH_ID).one()
@@ -123,101 +241,4 @@ def update_all(I_ID, houseInfo, visitInfo, oldClientInfo_list,
 	#create a new visit	
 	insert_visit(s, visitInfo.Vol_ID, pers.id, house.id, visitInfo.visitDate,
 			visitInfo.notes)
-	
-	
-	
-def update_all(Vol_ID, I_ID, street, client_data_tuple_list, 
-		new_client_list=None, visitDate=datetime.now(),
-		dateVerified = None, apt = None,	city = 'Troy',
-		state = 'NY', zip = '12180', notes=None):
-	"""Input:
-	update_all(int Vol_ID, int I_ID, string street, 
-		list[(int id, string fname, string lname, date dob, int phone)],
-		list[string fname, string lname, data dob, int phone)],
-		date visitDate, date dateVerified, string apt,
-		string city, string state, int zip, string notes)
-				
-	This function will update a household and all members in the household,
-	add any new members, and create a new visit record.
-	"""
-	pers = s.query(Person).filter(Person.id == I_ID).one()
-	house = s.query(Household).filter(Household.id == pers.HH_ID).one()
-	
-	#update household
-	update_household(s, house.id, street, city, state,
-			zip, apt, dateVerified)
-	
-	#add new clients (if they exist)
-	ncl = new_client_list #renamed for simplicity
-	if ncl == None: pass
-	else:
-		for i in range(0, len(ncl)):
-			fname = ncl[i][0]
-			lname = ncl[i][1]
-			dob = ncl[i][2]
-			
-			#check for phone number
-			if len(ncl[i]) > 3: pho = ncl[i][3]
-			else: pho = None
-			newpers = insert_person(s, fname, lname, dob, house.id, phonenum=pho)
-	
-	#update old clients
-	ctl = client_data_tuple_list #renamed for simplicity
-	for i in range(0, len(ctl)):
-		iid = ctl[i][0]
-		fname = ctl[i][1]
-		lname = ctl[i][2]
-		dob = ctl[i][3]
-		
-		#check for phone number
-		if len(ctl[i]) > 4: pho = ctl[i][4]
-		else: pho = None
-		update_person(s, iid, fname, lname, dob, phonenum=pho)
-		
-	
-	#create a new visit	
-	insert_visit(s, Vol_ID, pers.id, house.id, visitDate, notes)
-	
-	
-#Function to retrieve all data for a client
-def select_client(I_ID):
-	"""This function returns all client data for a selected client.
-	"""
-	
-	#find person and associated household
-	pers = s.query(Person).filter(Person.id == I_ID).one()	
-	house = s.query(Household).filter(Household.id == pers.HH_ID).one()
-	
-	info = [pers.id, pers.first_name, pers.last_name, pers.DOB, pers.age,
-			pers.phone, pers.date_joined, house.street_address, house.apt,
-			house.city, house.state, house.zip, house.date_verified]
-			
-	for member in house.members:
-		info.append( (member.first_name, member.last_name, member.DOB, member.age) )
-
-	agegroups = get_age_breakdown(house.members)
-	info.append(agegroups)
-	return info
-	
-
-#Function for drop-down, selection menu
-def list_people():
-	"""This function takes no arguments and returns a list of tuples.
-	Each tuple contains a string for a person's full name, a string for
-	the person's street_address, and an integer for the person's unique id.
-	
-	"""
-	people = []
-	
-	#create a list of tuples, where each tuple contains a string holding a 
-	#person's full-name, a string holding the person's street, and an integer
-	#holding the person's unique id. The names are added in alphabetic (A-Z)
-	#order.
-	#
-	for instance in s.query(Person).order_by(Person.last_name):
-		h = s.query(Household).filter(Household.id == instance.HH_ID).one()
-		fullname = instance.first_name + " " + instance.last_name
-		people.append((fullname, h.street_address, instance.id))
-		
-	return people
 	
