@@ -75,9 +75,10 @@ def list_people():
 #
 
 #Version 1:
-"""
+
 def select_client(I_ID):
-	This function returns all client data for a selected client.
+	"""This function returns all client data for a selected client.
+	"""
 	
 	#find person and associated household
 	pers = s.query(Person).filter(Person.id == I_ID).one()	
@@ -115,14 +116,14 @@ def select_client(I_ID):
 	info.append(visits)
 	
 	return info
+
+
 """
-
-
 #Version 2:
 def select_client(I_ID):
-	"""This a dictionary of objects containing all data for a selected
-	client.
-	"""
+	#This a dictionary of objects containing all data for a selected
+	#client.
+	
 	#find person and associated household
 	pers = s.query(Person).filter(Person.id == I_ID).one()	
 	house = s.query(Household).filter(Household.id == pers.HH_ID).one()
@@ -160,7 +161,8 @@ def select_client(I_ID):
 	info = {"visitor":visitor, "household":household, "member_list":members,
 			"visit_list":visits, "agegroup_dict":agegroups}
 	return info
-	
+"""
+
 
 def new_volunteer(s, firstname, lastname, phonenum=None):
 	"""This function creates a new record for a volunteer.
