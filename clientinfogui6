@@ -1,0 +1,436 @@
+#christina Hammer
+#client info page
+
+#v5, compatible with cdbtfunc and cdbtfunctions from June23rd, 2014
+
+from tkinter import *
+from tkinter import ttk
+
+
+from sqlalchemy import Column, DateTime, String, Integer, ForeignKey, func
+from sqlalchemy.orm import relationship, backref
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from datetime import datetime, timedelta, date
+from cdbtabledef import Household, Person, Volunteer, Visit
+from cdbfunctions import *
+from cdbifunc import *
+
+def addnew():
+    import newclientinter4
+    #once new client is confirmed, should display their info on the client info menu
+    return
+
+def quitprogram():
+    quit_session()
+    ciGui.destroy()
+    return
+
+def logoff():
+    import logGui
+    ciGui.destory()
+    return
+
+def hhupdateinfo(*args):
+    try:
+        st=str(address.get())
+        apt=str(aptn.get())
+        c=str(city.get())
+        sta=str(state.get()) 
+        zp=int(zipc.get())
+    except ValueError:
+            
+        s=3
+        HH_ID=1300
+        
+        date_verified=date.today()
+        update_household(s, HH_ID, street, city, state, zp, apt,date_verified)
+        print ('Changes have been saved!')
+        return
+
+def clupdateinfo(*args):
+    try:
+        fn=str(fname.get())
+        ln=str(lname.get())
+        db=date(yv.get(),mv.get(),dv.get())
+        
+    except ValueError:
+        s=2
+        I_ID=1201
+    
+        update_person(s, I_ID, fn, ln, db)
+        print ('Changes have been saved!')
+        return
+
+
+def addnewhment():
+    
+    Label(gridframe, text=' ').grid(row=99,column=0)
+
+    Label(gridframe, text="First Name: ").grid(row=100,column=0, sticky=E)
+    fentry=Entry(gridframe)
+    fentry.grid(row=100, column=1)
+    
+
+    Label(gridframe, text='Last Name: ').grid(row=100,column=2,sticky=E)
+    lentry=Entry(gridframe)
+    lentry.grid(row=100,column=3)
+   
+
+    yobv=StringVar()
+    mobv=StringVar()
+    dobv=StringVar()
+    
+    Label(gridframe, text='DOB: ').grid(row=100,column=4,sticky=E)
+    mbentry=Entry(gridframe,textvariable=mobv,width=6)
+    mbentry.grid(row=100,column=5)
+    mobv.set('mm')
+    
+    dbentry=Entry(gridframe, textvariable=dobv,width=6)
+    dbentry.grid(row=100,column=6)
+    dobv.set('dd')
+    
+    ybentry=Entry(gridframe,textvariable=yobv,width=6)
+    ybentry.grid(row=100,column=7)
+    yobv.set('yyyy')
+
+    Label(gridframe, text='Age: ').grid(row=100,column=8,)
+    Label(gridframe, text='##').grid(row=100,column=9,sticky=W)
+
+def addnewhm(*args):
+    addnewhm()
+
+    try:
+        ph=phone.get()
+        f=str(fentry.get())
+        l=str(lentry.get())
+        notes=str(notescv.get())
+        db=date(yobv.get(),mobv.get(),dobv.get())
+    except ValueError:
+        datejoined=date.today()
+        newhouse=1100
+        s=1
+
+        insert_person(s, f, l, db,datejoined , newhouse,ph)
+        print ('Household Member Added!')
+        return
+
+def visitrecord(*args):
+    try:
+        vnt=volun.get()
+        notes=str(notescv.get())
+
+    except ValueError:    
+        date_of_visit=datetime.now()
+        house_id=1100
+        s=1
+        pers_id=1101
+        insert_visit(s, vnt, pers_id, house_id, date_of_visit,notes)
+        print ("Visit Sucessfully Recorded!")
+        return
+
+def displayInfo(*args):
+    
+    client_id=cl_id.get()
+    client_id=int(client_id)
+    
+    c_list=(select_client(client_id))
+    #client info
+    fnv.set(c_list[0][1])
+    lnv.set(c_list[0][2])
+    dob=c_list[0][3] #date obj
+    mv.set(dob.month)
+    dv.set(dob.day)
+    yv.set(dob.year)
+    agev=c_list[0][4]
+    phv.set(c_list[0][5])
+    Label(gridframe, text=agev,font=('Helvetica',10),bg='light sea green').grid(row=2,column=9,sticky=W)
+    #household info
+    adv.set(c_list[2])
+    apv.set(c_list[3])
+    ctyv.set(c_list[4])
+    stav.set(c_list[5])
+    zpv.set(c_list[6])
+    #visit info
+    lv=list_visits()
+    print (lv)
+    
+    v1=lv[-1][1]
+    v2=lv[-2][1]
+    v3=lv[-3][1]
+    
+    Label(gridframe,text=v1,font=('Helvetica',10),bg='light sea green').grid(row=20,column=1,columnspan=6)
+    Label(gridframe,text=v2,font=('Helvetica',10),bg='light sea green').grid(row=21,column=1,columnspan=6)
+    Label(gridframe,text=v3,font=('Helvetica',10),bg='light sea green').grid(row=22,column=1,columnspan=6)
+
+    '''
+    hhdic=c_list[-1]
+    memnum=(hhdic['seniors'][0]+hhdic['infants'][0]+hhdic['children'][0]+hhdic['adults'][0]-1)
+    
+    for i in range(memnum):
+        rn=31+i
+        
+        fname = Entry(gridframe).grid(row=rn, column=1)
+        
+        lname=Entry(gridframe).grid(row=rn,column=3)
+
+        Label(gridframe, text='DOB: ',font=('Helvetica',10),bg='light sea green').grid(row=rn,column=4,sticky=E)
+
+        mfmv=StringVar()
+        dfmv=StringVar()
+        yfmv=StringVar()
+
+        mobfm=Entry(gridframe,textvariable=mfmv,width=6)
+        mobfm.grid(row=rn,column=5)
+
+        dobfm=Entry(gridframe,textvariable=dfmv,width=6)
+        dobfm.grid(row=rn,column=6)
+
+        yobfm=Entry(gridframe,textvariable=yfmv,width=6)
+        yobfm.grid(row=rn,column=7)
+
+        Label(gridframe, text='Age: ',font=('Helvetica',10),bg='light sea green').grid(row=rn,column=8,)
+        Label(gridframe, text='##',font=('Helvetica',10),bg='light sea green').grid(row=rn,column=9,sticky=W)
+
+        Label(gridframe, text='   ',font=('Helvetica',10),bg='light sea green').grid(row=rn,column=0,sticky=E)
+
+    Button(gridframe,text='Add New Household Member',command=addnewhm).grid(row=33+memnum, column=1)'''
+
+    return
+    
+
+
+ciGui=Tk()
+
+ciGui.geometry('1200x800')
+
+ciGui.configure(background='PaleGreen3')
+
+ciGui.title('Client Information')
+
+gridframe=Frame(ciGui).grid()
+
+
+####################Client Search#####################################
+
+Label(gridframe,text='Client Search', font=("Helvetica", 16),fg='white',bg='PaleGreen4').grid(row=0,column=0,columnspan=2, sticky=W)
+
+x=list_people()
+x.sort()
+
+Label(gridframe, text='     ',font=('Helvetica',10),bg='PaleGreen3').grid(row=0,column=2,sticky=E)
+
+client_listbox= Listbox(gridframe,height=10,width=40)
+for i in range(len(x)):
+    client_listbox.insert(i,x[i])
+client_listbox.grid(row=2, column=0,rowspan=5,columnspan=2)    
+
+   
+ttk.Separator(gridframe, orient='vertical').grid(row=1,column=2,rowspan=40,sticky=NS)
+
+cl_id=Entry(gridframe)
+cl_id.grid(row=9,column=0)
+
+Button(gridframe, text='Select Client', command=displayInfo).grid(row=9, column=1)
+
+Button(gridframe, text='New Client', command=displayInfo).grid(row=11, column=0)
+
+####################Client Search#####################################
+
+ttk.Separator(gridframe, orient='horizontal').grid(row=0,column=3,columnspan=40,sticky=EW)
+Label(gridframe,text='Client Information', font=("Helvetica", 16),fg='white',bg='PaleGreen4').grid(row=0,column=3,columnspan=12, sticky=W)
+Label(gridframe, text='   ',font=('Helvetica',10),bg='PaleGreen3').grid(row=1,column=3,sticky=E)
+
+fnv=StringVar()
+Label(gridframe, text="First Name: ",font=('Helvetica',12),bg='PaleGreen3').grid(row=2, column=3,sticky=E)
+fname = Entry(gridframe,textvariable=fnv,bd=4)
+fname.grid(row=2, column=4,sticky=W)
+
+lnv=StringVar()
+Label(gridframe, text='Last Name: ',font=('Helvetica',12),bg='PaleGreen3').grid(row=2,column=5,sticky=W)
+lname=Entry(gridframe,textvariable=lnv,bd=4)
+lname.grid(row=2,column=6,sticky=W)
+
+phv=StringVar()
+Label(gridframe, text='Phone: ',font=('Helvetica',12),bg='PaleGreen3').grid(row=2, column=7,sticky=W)
+phone=Entry(gridframe,textvariable=phv,bd=4)
+phone.grid(row=2, column=8,sticky=W)
+
+mv=StringVar()
+dv=StringVar()
+yv=StringVar()
+
+Label(gridframe, text='Date of Birth: ',font=('Helvetica',12),bg='PaleGreen3').grid(row=4,column=3,sticky=E)
+
+mob=Entry(gridframe,textvariable=mv,width=8,bd=4)
+mob.grid(row=4,column=4,sticky=W)
+
+Label(gridframe,text='mm',font=('Helvetica',10),bg='PaleGreen3').grid(row=3,column=4,sticky=SW)
+
+dob=Entry(gridframe,textvariable=dv,width=8,bd=4)
+dob.grid(row=4,column=5,sticky=W)
+Label(gridframe,text='dd',font=('Helvetica',10),bg='PaleGreen3').grid(row=3,column=5,sticky=SW)
+
+
+yob=Entry(gridframe,textvariable=yv,width=8,bd=4)
+yob.grid(row=4,column=6,sticky=W)
+Label(gridframe,text='yyyy',font=('Helvetica',10),bg='PaleGreen3').grid(row=3,column=6,sticky=SW)
+
+
+
+Label(gridframe, text='Age: ',font=('Helvetica',12),bg='PaleGreen3').grid(row=4,column=7,sticky=E)
+Label(gridframe, text='58',font=('Helvetica',12),bg='PaleGreen3').grid(row=4,column=8,sticky=W)
+
+Label(gridframe, text='   ',font=('Helvetica',10),bg='PaleGreen3').grid(row=5,column=3,sticky=E)
+
+####################Visit Info#####################################
+
+ttk.Separator(gridframe, orient='horizontal').grid(row=6,column=3,columnspan=40,sticky=EW)
+Label(gridframe,text='Visit Information', font=("Helvetica", 16),fg='white', bg='PaleGreen4').grid(row=6,column=3,columnspan=12, sticky=W)
+Label(gridframe, text='   ',font=('Helvetica',10),bg='PaleGreen3').grid(row=7,column=3,sticky=E)
+
+Label(gridframe, text='Date: ',font=('Helvetica',14),bg='PaleGreen3').grid(row=8,column=3)
+Label(gridframe, text='Notes:',font=('Helvetica',14),bg='PaleGreen3').grid(row=8,column=4)
+Label(gridframe, text='Visitor: ',font=('Helvetica',14),bg='PaleGreen3').grid(row=8,column=7)
+Label(gridframe, text='Volunteer: ',font=('Helvetica',14),bg='PaleGreen3').grid(row=8, column=8, sticky=W)
+Label(gridframe, text='   ',font=('Helvetica',10),bg='PaleGreen3').grid(row=23,column=0,sticky=E)
+
+visitdate=Entry(gridframe,bd=4)
+visitdate.grid(row=9, column=3)
+
+notescv=Entry(gridframe, width=60,bd=4)
+notescv.grid(row=9, column=4, columnspan=3)
+
+volun=Entry(gridframe,bd=4)
+volun.grid(row=9, column=7,sticky=W)
+
+visitor=Entry(gridframe,width=8,bd=4)
+visitor.grid(row=9, column=8)
+
+
+
+Label(gridframe, text='4/5/2014',font=('Helvetica',10),bg='PaleGreen3').grid(row=12,column=3)
+Label(gridframe, text='5/7/2014',font=('Helvetica',10),bg='PaleGreen3').grid(row=11,column=3)
+Label(gridframe, text='6/4/2014',font=('Helvetica',10),bg='PaleGreen3').grid(row=10,column=3)
+
+Label(gridframe, text='gave reusable grocery bag',font=('Helvetica',10),bg='PaleGreen3').grid(row=12,column=4)
+Label(gridframe, text='changed address',font=('Helvetica',10),bg='PaleGreen3').grid(row=11,column=4)
+Label(gridframe, text='---------',font=('Helvetica',10),bg='PaleGreen3').grid(row=10,column=4)
+
+
+Label(gridframe, text='Tywin Lannister',font=('Helvetica',10),bg='PaleGreen3').grid(row=10,column=7)
+Label(gridframe, text='Tyrion Lannister',font=('Helvetica',10),bg='PaleGreen3').grid(row=11,column=7)
+Label(gridframe, text='Cersei Lannister',font=('Helvetica',10),bg='PaleGreen3').grid(row=12,column=7)
+
+Label(gridframe, text='ABC',font=('Helvetica',10),bg='PaleGreen3').grid(row=10,column=8)
+Label(gridframe, text='DEF',font=('Helvetica',10),bg='PaleGreen3').grid(row=11,column=8)
+Label(gridframe, text='GHI',font=('Helvetica',10),bg='PaleGreen3').grid(row=12,column=8)
+'''
+currentvisit=Entry(gridframe)
+currentvisit.grid(row=21,column=0,sticky=E)
+#cvd=currentvisit.get()
+#cvd.split('/')
+
+#cvdateobj=date(cvd[2],cvd[1],cvd[0])
+'''
+
+Label(gridframe, text='   ',font=('Helvetica',10),bg='PaleGreen3').grid(row=13,column=3,sticky=E)
+
+####################Household Info#####################################
+
+ttk.Separator(gridframe, orient='horizontal').grid(row=14,column=3,columnspan=40,sticky=EW)
+Label(gridframe,text='Household Information', font=("Helvetica", 16),fg='white', bg='paleGreen4').grid(row=14,column=3,columnspan=12, sticky=W)
+Label(gridframe, text='   ',font=('Helvetica',10),bg='PaleGreen3').grid(row=15,column=3,sticky=E)
+
+adv=StringVar()
+Label(gridframe, text='Address: ',font=('Helvetica',12),bg='PaleGreen3').grid(row=16,column=3,sticky=E)
+address=Entry(gridframe,textvariable=adv,width=40,bd=4)
+address.grid(row=16, column=4,columnspan=2)
+
+
+apv=StringVar()
+Label(gridframe, text='Apt: ',font=('Helvetica',12),bg='PaleGreen3').grid(row=16,column=6,sticky=E)
+aptn=Entry(gridframe,textvariable=apv,width=10,bd=4)
+aptn.grid(row=16,column=7)
+
+ctyv=StringVar()
+Label(gridframe, text='City: ',font=('Helvetica',12),bg='PaleGreen3').grid(row=16,column=8,sticky=W)
+city=Entry(gridframe,textvariable=ctyv,bd=4)
+city.grid(row=16,column=9,sticky=W)
+Label(gridframe, text='   ',font=('Helvetica',12),bg='PaleGreen3').grid(row=17,column=3,sticky=E)
+
+stav=StringVar()
+Label(gridframe, text='State: ',font=('Helvetica',12),bg='PaleGreen3').grid(row=18,column=3,sticky=E)
+state=Entry(gridframe,textvariable=stav,bd=4)
+state.grid(row=18,column=4)
+
+zpv=StringVar()
+Label(gridframe, text='Zip Code: ',font=('Helvetica',12),bg='PaleGreen3').grid(row=18,column=5,sticky=E)
+zipc=Entry(gridframe,textvariable=zpv,bd=4)
+zipc.grid(row=18, column=6)
+
+Label(gridframe, text='   ',font=('Helvetica',12),bg='PaleGreen3').grid(row=19,column=3,sticky=E)
+
+Label(gridframe, text='Adults: 4',bg='PaleGreen3',font=('Helvetica',12)).grid(row=20,column=3,sticky=W)
+Label(gridframe, text='Children: 0',bg='PaleGreen3',font=('Helvetica',12)).grid(row=20,column=5,sticky=W)
+Label(gridframe, text='Seniors: 0',bg='PaleGreen3',font=('Helvetica',12)).grid(row=20,column=7,sticky=W)
+Label(gridframe, text='Infants: 0',bg='PaleGreen3',font=('Helvetica',12)).grid(row=20,column=9,sticky=W)
+
+Label(gridframe, text='   ',font=('Helvetica',12),bg='PaleGreen3').grid(row=21,column=3,sticky=E)
+Label(gridframe, text='Total: ',bg='PaleGreen3').grid(row=22,column=3)
+
+Label(gridframe, text='   ',font=('Helvetica',12),bg='PaleGreen3').grid(row=23,column=3,sticky=E)
+
+
+
+####################Household Members#####################################
+
+
+ttk.Separator(gridframe, orient='horizontal').grid(row=24,column=3,columnspan=40,sticky=EW)
+Label(gridframe,text='Household Members', font=("Helvetica", 16),fg='white',bg='PaleGreen4').grid(row=24,column=3,columnspan=12, sticky=W)
+Label(gridframe, text='   ',font=('Helvetica',10),bg='PaleGreen3').grid(row=25,column=3,sticky=E)
+
+Label(gridframe, text='select a family member to remove them, edit them, or view their full information',bg='PaleGreen3').grid(row=26, column=3, columnspan=4,sticky=W)
+''''
+Label(gridframe, text="First Name: ",font=('Helvetica',12),bg='PaleGreen3').grid(row=26, column=3, sticky=E)
+Label(gridframe, text='Last Name: ',font=('Helvetica',12),bg='PaleGreen3').grid(row=26,column=4,sticky=E)
+Label(gridframe, text='Date of Birth: ',font=('Helvetica',12),bg='PaleGreen3').grid(row=25,column=5,sticky=E)
+
+Label(gridframe,text='mm',font=('Helvetica',8),bg='PaleGreen3').grid(row=26,column=5,sticky=S)
+Label(gridframe,text='dd',font=('Helvetica',8),bg='PaleGreen3').grid(row=26,column=6,sticky=S) 
+Label(gridframe,text='yyyy',font=('Helvetica',8),bg='PaleGreen3').grid(row=26,column=7,sticky=S)'''
+
+a=['Cersei Lannister, Adult','Jaime Lannister, Adult','Tyrion Lannister, Adult']
+
+family_listbox= Listbox(gridframe,height=5,width=60,font=12)
+
+for i in range(len(a)):
+    family_listbox.insert(i,a[i])
+    
+family_listbox.grid(row=27, column=3,rowspan=4,columnspan=3) 
+
+#Label(gridframe, text=' ',font=('Helvetica',12),bg='PaleGreen3').grid(row=28,column=3)
+Button(gridframe, text='Add Member').grid(row=27,column=7)
+Button(gridframe, text='Remove Member').grid(row=28,column=7)
+Button(gridframe, text='View Member').grid(row=29,column=7)
+menubar=Menu(ciGui)
+
+optionsmenu=Menu(menubar,tearoff=0)
+optionsmenu.add_command(label='Quit', command=quitprogram)
+optionsmenu.add_command(label='log off', command=logoff)
+optionsmenu.add_command(label='Account Settings')
+menubar.add_cascade(label='Options',menu=optionsmenu)
+clientmenu=Menu(menubar,tearoff=0)
+
+clientmenu.add_command(label='Add New Client', command=addnew)
+clientmenu.add_command(label='Search Clients')
+clientmenu.add_command(label='Add member to household')
+menubar.add_cascade(label='Clients',menu=clientmenu)
+
+ciGui.config(menu=menubar)
+
+ciGui.mainloop()
+
+
+
