@@ -1,7 +1,7 @@
 """cdbifunc.py
 
 Developer: Noelle Todd
-Last Updated: July 1, 2014
+Last Updated: July 3, 2014
 
 This module holds all functions that will be called directly by the user
 interface. This module uses several functions in cdbfunctions.py; the two
@@ -17,7 +17,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from datetime import datetime
+from datetime import datetime, timedelta
 from cdbtabledef import Household, Person, Volunteer, Visit
 from cdbfunctions import *
 
@@ -128,6 +128,7 @@ def list_households():
 		houses.append((instance.street_address, instance.city, instance.id))
 	return houses
 
+
 def list_vis():
 	"""This function simply lists all visits.
 	"""
@@ -135,6 +136,7 @@ def list_vis():
 	for instance in s.query(Visit).order_by(Visit.date):
 		visits.append((instance.HH_ID, instance.id))
 	return visits
+
 
 def select_client(I_ID):
 	"""This a dictionary of objects containing all data for a selected
@@ -152,13 +154,13 @@ def select_client(I_ID):
 	
 	#create new object to hold visitor's data
 	visitor = oldClientData(id=pers.id, firstname=pers.first_name,
-							lastname=pers.last_name, dob=pers.DOB,
-							phone=pers.phone, dateJoined=pers.date_joined)
+				lastname=pers.last_name, dob=pers.DOB,
+				phone=pers.phone, dateJoined=pers.date_joined)
 	
 	#create new object to hold household data
 	household = houseData(street=house.street_address, city=house.city,
-							state=house.state, zip=house.zip, 
-							dateVerified=house.date_verified, apt=house.apt)
+				state=house.state, zip=house.zip, 
+				dateVerified=house.date_verified, apt=house.apt)
 							
 	#list to hold member-data objects
 	members = []
@@ -168,9 +170,9 @@ def select_client(I_ID):
 		if member.first_name == pers.first_name: pass
 		else:
 			mem = oldClientData(id=member.id, firstname=member.first_name,
-								lastname=member.last_name, dob=member.DOB,
-								phone=member.phone,
-								dateJoined=member.date_joined)
+						lastname=member.last_name, dob=member.DOB,
+						phone=member.phone,
+						dateJoined=member.date_joined)
 			members.append(mem)
 			
 	#get list of information about past 3 visits
@@ -178,10 +180,14 @@ def select_client(I_ID):
 	
 	#call to function to get dictionary of ages
 	agegroups = get_age_breakdown(house.members)
+	house.seniors = agegroups["seniors"]
+	house.adults = agegroups["adults"]
+	house.children = agegroups["children"]
+	house.infants = agegroups["infants"]
 	
 	#create dictionary of all objects to be returned
 	info = {"visitor":visitor, "household":household, "member_list":members,
-			"visit_list":visits, "agegroup_dict":agegroups}
+		"visit_list":visits, "agegroup_dict":agegroups}
 	return info
 	
 
@@ -204,8 +210,8 @@ def new_household(houseInfo, visitInfo, newClientInfo_list):
 	"""
 	#create new household
 	newhouse = insert_household(s, houseInfo.street, houseInfo.dateVerified,
-								houseInfo.apt, houseInfo.city,
-								houseInfo.state, houseInfo.zip)
+					houseInfo.apt, houseInfo.city,
+					houseInfo.state, houseInfo.zip)
 	
 	#create new person for every household member
 	data = newClientInfo_list #variable renamed for simplicity	
@@ -218,30 +224,36 @@ def new_household(houseInfo, visitInfo, newClientInfo_list):
 		dateJoined = data[i].dateJoined
 		
 		pers = insert_person(s, data[i].firstname, data[i].lastname,
-							data[i].dob, newhouse, data[i].dateJoined,
-							data[i].phone)
+					data[i].dob, newhouse, data[i].dateJoined,
+					data[i].phone)
 		
 		#the first person is the actual visitor; save for insert_visit
 		if i == 0:
 			newpers = pers
 	
+	age_dict = get_age_breakdown(newhouse.members)
+	newhouse.seniors = age_dict["seniors"]
+	newhouse.adults = age_dict["adults"]
+	newhouse.children = age_dict["children"]
+	newhouse.infants = age_dict["infants"]
+	
 	#create new visit for household
 	insert_visit(s, visitInfo.Vol_ID, newpers, newhouse, 
-				visitInfo.visitDate, visitInfo.notes)	
+			visitInfo.visitDate, visitInfo.notes)	
 
 				
 ####Functions for updating records####
 
 def update_all(I_ID, houseInfo, visitInfo, oldClientInfo_list, 
-				newClientInfo_list=None):
+		newClientInfo_list=None):
 				
 	pers = s.query(Person).filter(Person.id == I_ID).one()
 	house = s.query(Household).filter(Household.id == pers.HH_ID).one()
 	
 	#update household
 	update_household(s, house.id, houseInfo.street, houseInfo.city, 
-					houseInfo.state, houseInfo.zip, houseInfo.apt,
-					houseInfo.dateVerified)
+			houseInfo.state, houseInfo.zip, houseInfo.apt,
+			houseInfo.dateVerified)
 	
 	#add new clients (if they exist)
 	data = newClientInfo_list #renamed for simplicity
@@ -249,18 +261,18 @@ def update_all(I_ID, houseInfo, visitInfo, oldClientInfo_list,
 	else:
 		for i in range(0, len(data)):
 			newpers = insert_person(s, data[i].firstname, data[i].lastname,
-									data[i].dob, house.id, 
-									phonenum=data[i].phone)
+						data[i].dob, house.id, 
+						phonenum=data[i].phone)
 	
 	#update old clients
 	old = oldClientInfo_list #renamed for simplicity
 	for i in range(0, len(old)):
 		update_person(s, old[i].id, old[i].firstname, old[i].lastname, 
-					old[i].dob, old[i].phone)
+				old[i].dob, old[i].phone)
 		
 	#create a new visit	
 	insert_visit(s, visitInfo.Vol_ID, pers.id, house.id, visitInfo.visitDate,
-				visitInfo.notes)
+			visitInfo.notes)
 	
 	
 def update_vol(vol_id, firstname, lastname, phonenum):
@@ -345,25 +357,17 @@ def remove_household(I_ID):
 	
 ####Functions for generating monthly/yearly reports####
 
-
-def generate_monthly_report():pass
-  """
-	#This function will generate a csv/excel file that holds all
-	#relevant info for a monthly report.
-	
-	s.close()
-	import csv
-	
-	metadata = sqlalchemy.MetaData()
-	#engine = sqlalchemy.create_engine('sqlite:///test_db.sqlite')
-	metadata.bind = engine
+def generate_monthly_report():
+	"""This function will generate a csv/excel file that holds
+	data about households for the past month.
+	"""
+	duration = timedelta(days=31)
+	generate_report(s, duration)
 	
 	
-	outfile = open('test.csv', 'w')
-	outcsv = csv.writer(outfile)
-	mytable = 
-	select = sqlalchemy.sql.select([Volunteer])
-	records = s.execute(select)
-	[ outcsv.writerow(curr.first_name) for curr in records ]
-	outfile.close()
-  """
+def generate_yearly_report():
+	"""This function will generate a csv/excel file that holds
+	data about households for the past year.
+	"""
+	duration = timedelta(days=365)
+	generate_report(s, duration)
