@@ -1,7 +1,7 @@
 """cdbtabledef.py
 
 Developer: Noelle Todd
-Last Updated: July 1, 2014
+Last Updated: July 3, 2014
 
 This module will create 4 tables for the client database, using the
 sqlalchemy module, and the sqlite database. 
@@ -28,10 +28,14 @@ class Household(base):
 	id = Column(Integer, primary_key=True)
 	street_address = Column(String)
 	apt = Column(String)
-	city = Column(String, default = 'Troy')
-	state = Column(String(2), default = 'NY')
-	zip = Column(Integer, default = '12180')
+	city = Column(String, default='Troy')
+	state = Column(String(2), default='NY')
+	zip = Column(Integer, default='12180')
 	date_verified = Column(DateTime)
+	seniors = Column(Integer, default=0)
+	adults = Column(Integer, default=0)
+	children = Column(Integer, default=0)
+	infants = Column(Integer, default=0)
 	
 class Person(base):
 	"""This class creates a table with columns for individual's data.
@@ -46,14 +50,14 @@ class Person(base):
 	date_joined = Column(DateTime)
 	HH_ID = Column(Integer, ForeignKey('household.id'))
 	household = relationship(Household,
-							backref=backref('members', uselist=True,
-											passive_updates=False))
+				backref=backref('members', uselist=True,
+						passive_updates=False))
 		
 class Volunteer(base):
 	"""This class creates a table with columns for volunteer data.
 	"""
 	__tablename__ = 'volunteer'
-	id = Column(Integer, primary_key = True)
+	id = Column(Integer, primary_key=True)
 	first_name = Column(String)
 	last_name = Column(String)
 	phone = Column(String)
@@ -64,11 +68,11 @@ class Visit(base):
 	"""This class creates a table with columns tracking visit history.
 	"""
 	__tablename__ = 'visit'
-	id = Column(Integer, primary_key = True)
+	id = Column(Integer, primary_key=True)
 	I_ID = Column(Integer, ForeignKey('person.id'))
 	HH_ID = Column(Integer, ForeignKey('household.id'))
 	Vol_ID = Column(Integer, ForeignKey('volunteer.id'))
-	date = Column(DateTime, default = func.now())
+	date = Column(DateTime, default=func.now())
 	visit_notes = Column(String(256))
 	
 base.metadata.create_all(engine)
