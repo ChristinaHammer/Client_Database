@@ -1,7 +1,7 @@
 """cdbfunctions.py
 
 Developer: Noelle Todd
-Last Updated: July 1, 2014
+Last Updated: July 3, 2014
 
 This module consists of functions which will be called by the user
 interface, in order to insert, delete, update, etc. data in the database.
@@ -10,14 +10,14 @@ be added or edited in the following weeks.
 
 """
 
+import sqlalchemy
 from sqlalchemy import Column, DateTime, String, Integer, ForeignKey, func
 from sqlalchemy import desc
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from datetime import datetime
-from datetime import date
+from datetime import datetime, date, timedelta
 from cdbtabledef import Household, Person, Volunteer, Visit
 
 
@@ -84,32 +84,32 @@ class visitDataReturn:
 
 #functions for inserts	
 def insert_household(s, street, dateverified=None, Apt=None, 
-					City='Troy', State='NY', Zip='12180'):
+			City='Troy', State='NY', Zip='12180'):
 	"""This function creates a new row to hold a household's data. It returns
 	the household id, which will be used when we insert household members.
 
 	"""
 	newhouse = Household(street_address = street, apt = Apt, city = City,
-						  state = State, zip = Zip, 
-						  date_verified = dateverified)
+				state = State, zip = Zip, 
+				date_verified = dateverified)
 	s.add(newhouse)
 	s.commit()
-	return newhouse.id
+	return newhouse
 
 	
 def insert_person(s, firstname, lastname, dob, newhouse, 
-				datejoined=datetime.now(), phonenum=None):
+			datejoined=datetime.now(), phonenum=None):
 	"""This function creates a new row to hold an individual's data. There is
 	no return.
 	
 	"""
 	newpers = Person(first_name=firstname, last_name=lastname, DOB=dob,
-					date_joined=datejoined, phone=phonenum)
+			date_joined=datejoined, phone=phonenum)
 	newpers.HH_ID = newhouse
 	newpers.age = age(dob)
 	s.add(newpers)
 	s.commit()
-	return newpers.id
+	return newpers
 
 
 def insert_volunteer(s, firstname, lastname, phonenum=None):
@@ -118,25 +118,25 @@ def insert_volunteer(s, firstname, lastname, phonenum=None):
 	
 	"""
 	new_vol = Volunteer(first_name=firstname, last_name=lastname, 
-						phone=phonenum)
+				phone=phonenum)
 	s.add(new_vol)
 	s.commit()
 	
 	
 def insert_visit(s, Vol_id, pers_id, house_id, date_of_visit=datetime.now(),
-				notes=None):
+		notes=None):
 	"""This function creates a new row in the Visits table to hold
 	the data for a visit.
 	"""
 	new_visit = Visit(I_ID=pers_id, HH_ID=house_id, Vol_ID=Vol_id,
-					date=date_of_visit, visit_notes=notes)
+				date=date_of_visit, visit_notes=notes)
 	s.add(new_visit)
 	s.commit()	
 	
 	
 #functions for updating records
 def update_household(s, HH_ID, street, city, state, zip, apt=None,
-					date_verified=None):
+			date_verified=None):
 	"""This function will update a households records
 	"""
 	house = s.query(Household).filter(Household.id == HH_ID).one()
@@ -233,19 +233,19 @@ def list_visits(s, I_ID):
 	
 	#returns all visits for the household in descending order of date
 	visithistory = s.query(Visit, Person, Volunteer).\
-						filter(Visit.HH_ID == house.id).\
-						filter(Visit.I_ID == Person.id).\
-						filter(Visit.Vol_ID == Volunteer.id).\
-						order_by(desc(Visit.date)).all()
+				filter(Visit.HH_ID == house.id).\
+				filter(Visit.I_ID == Person.id).\
+				filter(Visit.Vol_ID == Volunteer.id).\
+				order_by(desc(Visit.date)).all()
 	
 	#retrieves information for past three visits and returns in a list.
 	for instance in visithistory[0:3]:
 		clientname = instance.Person.first_name + " " +\
-						instance.Person.last_name
+				instance.Person.last_name
 		volname = instance.Volunteer.first_name + " " +\
-						instance.Volunteer.last_name
+				instance.Volunteer.last_name
 		visit = visitDataReturn(instance.Visit.date, clientname, volname, 
-								instance.Visit.visit_notes)
+					instance.Visit.visit_notes)
 		visits.append(visit)
 						
 	return visits
@@ -274,3 +274,47 @@ def get_age_breakdown(members):
 	agegroups = {'infants':infants, 'children':children, 'adults':adults,
 				'seniors':seniors}	
 	return agegroups
+
+
+def generate_report(s, duration):
+	"""This function will generate a csv/excel file that holds all
+	relevant info for a monthly report. 
+	
+	First name, Last name (of visitor only)
+	City of household
+	#of children, seniors, adults, and infants
+	total number of each of the above
+	total number of households
+	total number of people served
+	"""
+	
+	import csv
+	
+	#open file and so on
+	csvfile = open('test.csv', 'w', newline='')	
+	outcsv = csv.writer(csvfile)     
+	
+	#calculate a month ago
+	today = datetime.now()
+	month_ago = today - duration
+	
+	#convert date objects to strings for comparison purposes
+	month_ago = str(month_ago)
+	
+	#one giant massive query
+	select = sqlalchemy.sql.select([Person.first_name, Person.last_name,
+					Household.seniors, Household.adults,
+					Household.children, Household.infants,
+					Household.city, Visit.date])\
+				.where(Visit.I_ID == Person.id)\
+				.where(Visit.HH_ID == Household.id)\
+				.where(Visit.date >= month_ago)
+	
+	records = s.execute(select)
+	
+	#write to csv file
+	outcsv.writerow(records.keys())
+	outcsv.writerows(records)
+	
+	csvfile.close()
+	s.close()
