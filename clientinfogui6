@@ -1,6 +1,6 @@
 #christina Hammer
 #client info page
-#updates July 15th, very much in progress
+#updates July 18th, very much in progress
 
 #v6, compatible with cdbtfunc and cdbtfunctions from July 3rd, 2014
 
@@ -24,15 +24,16 @@ def familyEntryBoxes(*args):
 
     n=int(q.get())
     
-    Label(gridframe, text='First Name:').grid(row=24,column=3)
-    Label(gridframe, text='Last Name:').grid(row=24,column=4)
-    Label(gridframe, text='Date of Birth:').grid(row=24,column=5)
-    Label(gridframe, text='Phone').grid(row=24,column=8)
-    Label(gridframe,text='mm',font=('Helvetica',10),bg='LemonChiffon2').grid(row=25,column=5,sticky=S)
-    Label(gridframe,text='dd',font=('Helvetica',10),bg='LemonChiffon2').grid(row=25,column=6,sticky=S)
-    Label(gridframe,text='yyyy',font=('Helvetica',10),bg='LemonChiffon2').grid(row=25,column=7,sticky=S)
+    famfn.grid(row=24,column=3)
+    famln.grid(row=24,column=4)
+    famdob.grid(row=24,column=5)
+    famphone.grid(row=24,column=8)
+    fammon.grid(row=25,column=5,sticky=S)
+    famday.grid(row=25,column=6,sticky=S)
+    famyear.grid(row=25,column=7,sticky=S)
     
     for i in range(n):
+        
         Entry(gridframe).grid(row=26+i, column=3)
         Entry(gridframe).grid(row=26+i, column=4)
         Entry(gridframe, width=8).grid(row=26+i, column=5)
@@ -40,6 +41,7 @@ def familyEntryBoxes(*args):
         Entry(gridframe, width=8).grid(row=26+i, column=7)
         Entry(gridframe).grid(row=26+i, column=8)
 
+    ##need to figure out how to get data from spawned entry boxes
     return
     
 def newClientDisplay(*args):
@@ -68,8 +70,10 @@ def newClientDisplay(*args):
     newState.grid(row=18,column=4)
     newZipc.grid(row=18, column=6)
 
-    ttk.Separator(gridframe, orient='horizontal').grid(row=20,column=3,columnspan=40,sticky=EW)
-    Label(gridframe,text='Household Members', font=("Helvetica", 16),fg='white',bg='PaleGreen4').grid(row=20,column=3,columnspan=12, sticky=W)
+    addhhsep.grid(row=20,column=3,columnspan=40,sticky=EW)
+    addhhtitle.grid(row=20,column=3,columnspan=12, sticky=W)
+
+    
     Label(gridframe, text='   ',font=('Helvetica',10),bg='LemonChiffon2').grid(row=21,column=3,sticky=E)
 
     ##temporarily remove display
@@ -86,6 +90,11 @@ def newClientDisplay(*args):
     houseSep.grid_forget()
     saveB.grid_forget()
     cancelB.grid_forget()
+    dispad.grid_forget()
+    dischil.grid_forget()
+    dissen.grid_forget()
+    disinf.grid_forget()
+    distot.grid_forget()
 
     ##enter family members
     famNum.grid(row=22, column=4)
@@ -93,6 +102,7 @@ def newClientDisplay(*args):
     entNum.grid(row=22, column=3)
 
     newMembersB.grid(row=22, column=5)
+    
     newClientSave.grid(row=40,column=3, columnspan=2)
     cancelNewB.grid(row=40, column=5, columnspan=2)
 
@@ -117,27 +127,56 @@ def clearToMain():
     newZipc.grid_forget()
     famNum.grid_forget()
     entNum.grid_forget()
-    newMembersB.grid_forget
-    newClientSave.grid_forget
-    cancelNewB.grid_forget
-
+    newMembersB.grid_forget()
+    newClientSave.grid_forget()
+    cancelNewB.grid_forget()
+    famfn.grid_forget()
+    famln.grid_forget()
+    famdob.grid_forget()
+    famphone.grid_forget()
+    fammon.grid_forget()
+    famday.grid_forget()
+    famyear.grid_forget()
+    addhhsep.grid_forget()
+    addhhtitle.grid_forget()
+    
+    #####add back
+    adultsLabel.grid(row=20,column=3,sticky=W)
+    childrenLabel.grid(row=20,column=4,sticky=W)
+    seniorsLabel.grid(row=20,column=5,sticky=W)
+    infantsLabel.grid(row=20,column=6,sticky=W)
+    totalLabel.grid(row=20,column=7,sticky=W)
+    family_listbox.grid(row=26, column=3,rowspan=4,columnspan=3) 
+    addmemb.grid(row=26,column=7)
+    removmemb.grid(row=27,column=7)
+    viewmemb.grid(row=28,column=7)
+    housetitle.grid(row=24,column=3,columnspan=12, sticky=W)
+    houseSep.grid(row=24,column=3,columnspan=40,sticky=EW)
+    saveB.grid(row=33, column=3, columnspan=2)
+    cancelB.grid(row=33, column=5, columnspan=2)
+    
     return
 
 def addNew():
 
     #create visit object
-    visitInfo = visitData(1, notv.get())
+    #currently using placeholder number for Volunteer ID
+    #(self, Vol_ID, visitDate=datetime.now(), notes=None)
+    visitInfo = visitData(1, nnotv.get())
 
     #create newClient objects
-    ncd1 = newClientData(fnv.get(), fnv.get(), date(yv.get(), mv.get(), dv.get()))
+    #(self, firstname, lastname, dob, phone=None,dateJoined=datetime.now())
+    ncd1 = newClientData(nfnv.get(), nlnv.get(), date(int(nyv.get()), int(nmv.get()), int(ndv.get())))
     
 
     newClientInfo_list = [ncd1]
 
     #create household object
-    houseInfo = houseData(adv.get(),city=ctyv.get())
+    #(self, street, city='Troy', state='NY', zip='12180',dateVerified=None, apt=None)
+    houseInfo = houseData(nadv.get(),city=ctyv.get(),state=nstav.get(), zip=nzpv.get(),apt=napv.get())
 
     #send all objects to new_household function
+    #(houseInfo, visitInfo, newClientInfo_list)
     new_household(houseInfo, visitInfo, newClientInfo_list)
     
     clearToMain()
@@ -163,14 +202,27 @@ def yearlyReport(*args):
     return
     
 def updateInfo(*args):
-    
-    visitInfo = visitData(volv.get(), visitDate=date.today(), notes=notv.get())
 
+    #(self, Vol_ID, visitDate=datetime.now(), notes=None)
+    print (notv.get())
+    try:
+        vol_id = int(volv.get())
+        vdate = datetime.now()
+        note = str(notv.get())
+        visitInfo = visitData(vol_id, visitDate=vdate, notes=note)
+        #visitInfo = visitData(volv.get(), visitDate=datetime.now(),notes=notv.get())
+    except ValueError:
+        print("ooops!")
+
+    #(self, id, firstname, lastname, dob, phone=None, dateJoined=datetime.now())
     cd= oldClientData(int(cl_id.get()), fnv.get(), lnv.get(), date(int(yv.get()), int(mv.get()), int(dv.get())),phone=phv.get())
     
     ClientInfo_list = [cd]
+    
+    #(self, street, city='Troy', state='NY', zip='12180',dateVerified=None, apt=None)
     houseInfo = houseData(adv.get(),city=ctyv.get(),state=stav.get(), zip=zpv.get(),apt=apv.get())
-
+    
+    #(I_ID, houseInfo, visitInfo, oldClientInfo_list,newClientInfo_list=None)
     update_all(cl_id.get(), houseInfo, visitInfo, ClientInfo_list)
     print ('Changes have been saved!')
     return
@@ -178,6 +230,7 @@ def updateInfo(*args):
 
 
 def displayClientInfo(*args):
+    clearToMain()
     
     client_id=cl_id.get()
     client_id=int(client_id)
@@ -192,7 +245,7 @@ def displayClientInfo(*args):
     mv.set(visitor.dob.month)
     dv.set(visitor.dob.day)
     yv.set(visitor.dob.year)
-    agev=age(visitor.dob)
+    agev.set(age(visitor.dob))
     phv.set(visitor.phone)
     
     return
@@ -209,29 +262,38 @@ def displayHouseholdInfo(*args):
     stav.set(house.state)
     zpv.set(house.zip)
 
-    adl=str(info["agegroup_dict"]["adults"])
+    ad=str(info["agegroup_dict"]["adults"])
     a="Adults: "
-    adl=a+adl
-    chil=str(info["agegroup_dict"]["children"])
+    ad=str(a+ad)
+    adl.set(ad)
+    
+    ch=str(info["agegroup_dict"]["children"])
     c="Children: "
-    chil=c+chil
-    sen=str(info["agegroup_dict"]["seniors"])
+    ch=c+ch
+    chil.set(ch)
+    
+    sn=str(info["agegroup_dict"]["seniors"])
     s="Seniors: "
-    sen=s+sen
-    inf=str(info["agegroup_dict"]["infants"])
+    sn=s+sn
+    sen.set(sn)
+    
+    infa=str(info["agegroup_dict"]["infants"])
     i="Infants: "
-    inf=i+inf
+    infa=i+infa
+    inf.set(infa)
     
-    tot=int(info["agegroup_dict"]["adults"])+int(info["agegroup_dict"]["children"])+int(info["agegroup_dict"]["seniors"])+int(info["agegroup_dict"]["infants"])
-    tot=str(tot)
+    tl=int(info["agegroup_dict"]["adults"])+int(info["agegroup_dict"]["children"])+int(info["agegroup_dict"]["seniors"])+int(info["agegroup_dict"]["infants"])
+    tl=str(tl)
     t='Total: '
-    tot=t+tot
+    tl=t+tl
+    tot.set(tl)
     
-    Label(gridframe,text=adl,font=('Helvetica',12),bg='LemonChiffon2').grid(row=20,column=3, sticky=W)
-    Label(gridframe,text=chil,font=('Helvetica',12),bg='LemonChiffon2').grid(row=20,column=4, sticky=W)
-    Label(gridframe,text=sen,font=('Helvetica',12),bg='LemonChiffon2').grid(row=20,column=5, sticky=W)
-    Label(gridframe,text=inf,font=('Helvetica',12),bg='LemonChiffon2').grid(row=20,column=6, sticky=W)
-    Label(gridframe, text='Total: ',bg='LemonChiffon2',font=('Helvetica',12)).grid(row=20,column=7,sticky=W)
+    dispad.grid(row=20,column=3, sticky=W)
+    dischil.grid(row=20,column=4, sticky=W)
+    dissen.grid(row=20,column=5, sticky=W)
+    disinf.grid(row=20,column=6, sticky=W)
+    distot.grid(row=20,column=7,sticky=W)
+    
     return
 
 def displayVisitInfo(*args):
@@ -239,6 +301,11 @@ def displayVisitInfo(*args):
     client_id=cl_id.get()
     client_id=int(client_id)
     info = select_client(client_id)
+    visitor = info["visitor"]
+
+    #name=str(visitor.firstname)+str(visitor.lastname)
+    visdatev.set(date.today())
+    visv.set(visitor.firstname)
     
     #visit info
     visits=info["visit_list"]
@@ -286,8 +353,7 @@ def displayVisitInfo(*args):
     
     elif 0<len(visits)<3:
         
-        for i in range(len(visits)):
-            v=visits[i]
+        for v in visits:
             d=v.date
             n=v.notes
             vi=v.visitor
@@ -304,10 +370,14 @@ def displayHouseholdMem(*args):
 
     client_id=cl_id.get()
     info=select_client(client_id)
+    family_listbox.delete(0,END)
     a=[]
     
     for member in info["member_list"]:
-        x=(member.firstname, member.lastname,member.dob.month, member.dob.day, member.dob.year)
+        s=str(age(member.dob))
+        q='Age: '
+        s=q+s
+        x=(member.firstname, member.lastname,s)
         a.append(x)
 
     for i in range(len(a)):
@@ -325,7 +395,11 @@ def displayInfo(*args):
     
     
     return
+
+def clientIDSelection(*args):
     
+    cl_id.set(client_listbox.curselection())
+    return
     
 ciGui=Tk()
 
@@ -363,8 +437,9 @@ client_listbox.grid(row=2, column=0,rowspan=5,columnspan=2)
    
 ttk.Separator(gridframe, orient='vertical').grid(row=1,column=2,rowspan=40,sticky=NS)
 
-cl_id=Entry(gridframe)
-cl_id.grid(row=9,column=0)
+cl_id=IntVar()
+cl_ident=Entry(gridframe,textvariable=cl_id)
+cl_ident.grid(row=9,column=0)
 
 Button(gridframe, text='Select Client', command=displayInfo).grid(row=9, column=1)
 
@@ -412,9 +487,9 @@ yob.grid(row=4,column=6,sticky=W)
 Label(gridframe,text='yyyy',font=('Helvetica',10),bg='LemonChiffon2').grid(row=3,column=6,sticky=SW)
 
 
-
+agev=StringVar()
 Label(gridframe, text='Age: ',font=('Helvetica',12),bg='LemonChiffon2').grid(row=4,column=7,sticky=E)
-
+Label(gridframe, textvariable=agev,font=('Helvetica',12),bg='LemonChiffon2').grid(row=4,column=8,sticky=W)
 
 Label(gridframe, text='   ',font=('Helvetica',10),bg='LemonChiffon2').grid(row=5,column=3,sticky=E)
 
@@ -438,7 +513,7 @@ notv=StringVar()
 notescv=Entry(gridframe, textvariable=notv,width=60,bd=4)
 notescv.grid(row=9, column=4, columnspan=3)
 
-volv=StringVar()
+volv=IntVar()
 volun=Entry(gridframe,textvariable=volv,bd=4)
 volun.grid(row=9, column=7,sticky=W)
 
@@ -525,7 +600,7 @@ family_listbox.grid(row=26, column=3,rowspan=4,columnspan=3)
 addmemb=Button(gridframe, text='Add Member')
 addmemb.grid(row=26,column=7)
 removmemb=Button(gridframe, text='Remove Member')
-addmemb.grid(row=27,column=7)
+removmemb.grid(row=27,column=7)
 viewmemb=Button(gridframe, text='View Member')
 viewmemb.grid(row=28,column=7)
 menubar=Menu(ciGui)
@@ -534,6 +609,19 @@ Label(gridframe, text='   ',font=('Helvetica',10),bg='LemonChiffon2').grid(row=3
 ttk.Separator(gridframe, orient='horizontal').grid(row=31,column=3,columnspan=40,sticky=EW)
 
 Label(gridframe, text='   ',font=('Helvetica',10),bg='LemonChiffon2').grid(row=32,column=3,sticky=E)
+####################Info Display Widgets#####################################
+
+adl=StringVar()
+dispad=Label(gridframe,textvariable=adl,font=('Helvetica',12),bg='LemonChiffon2')
+chil=StringVar()
+dischil=Label(gridframe,textvariable=chil,font=('Helvetica',12),bg='LemonChiffon2')
+sen=StringVar()
+dissen=Label(gridframe,textvariable=sen,font=('Helvetica',12),bg='LemonChiffon2')
+inf=StringVar()
+disinf=Label(gridframe,textvariable=inf,font=('Helvetica',12),bg='LemonChiffon2')
+tot=StringVar()
+distot=Label(gridframe, textvariable=tot,bg='LemonChiffon2',font=('Helvetica',12))
+
 
 ####################New Client Display Widgets#####################################
 
@@ -597,8 +685,20 @@ nzpv=StringVar()
 newZipc=Entry(gridframe,textvariable=nzpv,bd=4)
 
 ##new family members
+addhhsep=ttk.Separator(gridframe, orient='horizontal')
+addhhtitle=Label(gridframe,text='Add Household Members', font=("Helvetica", 16),fg='white',bg='PaleGreen4')
+
+
 entNum=Label(gridframe, text='Enter Number of Family Members: ',font=('Helvetica',10),bg='LemonChiffon2')
 
+famfn=Label(gridframe, text='First Name:',font=('Helvetica',10),bg='LemonChiffon2')
+famln=Label(gridframe, text='Last Name:',font=('Helvetica',10),bg='LemonChiffon2')
+famdob=Label(gridframe, text='Date of Birth:',font=('Helvetica',10),bg='LemonChiffon2')
+famphone=Label(gridframe, text='Phone',font=('Helvetica',10),bg='LemonChiffon2')
+fammon=Label(gridframe,text='mm',font=('Helvetica',10),bg='LemonChiffon2')
+famday=Label(gridframe,text='dd',font=('Helvetica',10),bg='LemonChiffon2')
+famyear=Label(gridframe,text='yyyy',font=('Helvetica',10),bg='LemonChiffon2')
+    
 newMembersB=Button(gridframe, text='Add Memebers',command=familyEntryBoxes)
 newClientSave=Button(gridframe, text='Save Client', command=addNew)
 cancelNewB=Button(gridframe, text='Cancel New Entry', command=clearToMain)
