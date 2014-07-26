@@ -1,7 +1,7 @@
 """cdbifunc.py
 
 Developer: Noelle Todd
-Last Updated: July 3, 2014
+Last Updated: July 26, 2014
 
 This module holds all functions that will be called directly by the user
 interface. This module uses several functions in cdbfunctions.py; the two
@@ -241,10 +241,12 @@ def new_household(houseInfo, visitInfo, newClientInfo_list):
 	insert_visit(s, visitInfo.Vol_ID, newpers, newhouse, 
 			visitInfo.visitDate, visitInfo.notes)	
 
+	return newpers.id
+	
 				
 ####Functions for updating records####
 
-def update_all(I_ID, houseInfo, visitInfo, oldClientInfo_list, 
+def update_all(I_ID, houseInfo, oldClientInfo_list, 
 		newClientInfo_list=None):
 				
 	pers = s.query(Person).filter(Person.id == I_ID).one()
@@ -271,8 +273,19 @@ def update_all(I_ID, houseInfo, visitInfo, oldClientInfo_list,
 				old[i].dob, old[i].phone)
 		
 	#create a new visit	
+	#insert_visit(s, visitInfo.Vol_ID, pers.id, house.id, visitInfo.visitDate,
+	#		visitInfo.notes)
+
+	
+def new_visit(I_ID, visitInfo):
+	"""This function records a visit for a household.
+	"""
+	pers = s.query(Person).filter(Person.id == I_ID).one()
+	house = s.query(Household).filter(Household.id == pers.HH_ID).one()
+	
+	#create a new visit
 	insert_visit(s, visitInfo.Vol_ID, pers.id, house.id, visitInfo.visitDate,
-			visitInfo.notes)
+				visitInfo.notes)	
 	
 	
 def update_vol(vol_id, firstname, lastname, phonenum):
