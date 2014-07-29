@@ -48,6 +48,7 @@ class Person(base):
 	age = Column(Integer)
 	phone = Column(String)
 	date_joined = Column(DateTime)
+	notes = Column(String)
 	HH_ID = Column(Integer, ForeignKey('household.id'))
 	household = relationship(Household,
 				backref=backref('members', uselist=True,
