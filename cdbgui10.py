@@ -143,32 +143,24 @@ class allobjects:
         #Date of Birth
         self.doblabel = Label(self.gridframe, text='Date of Birth: ',
                               font=('Helvetica',12),bg=self.bgcolor)\
-                              .grid(row=4,column=3,sticky=E)
+                              .grid(row=4,column=3, rowspan=2, sticky=E)
         self.mv = StringVar()
         self.dv = StringVar()
         self.yv = StringVar()
-        
-        self.datePane = Frame(self.gridframe, bg=self.bgcolor)
-        #for month entry
-        self.mob = ttk.Combobox(self.datePane, width=12, state='readonly',
+
+        #dob month combobox
+        self.mob = ttk.Combobox(self.gridframe, width=10, state='readonly',
                                 values=self.month_li, textvariable=self.mv)
         self.mob.bind('<<ComboboxSelected>>', self.monthbox_select)
-        #for day entry
-        self.dob = Spinbox(self.datePane, from_=0, to=0,
+        #dob day spinbox
+        self.dob = Spinbox(self.gridframe, from_=0, to=0,
                            textvariable=self.dv, width=5, bd=4)
-        #for year entry
-        self.yob = Spinbox(self.datePane, from_=1900, to=2500,
+        #dob year spinbox
+        self.yob = Spinbox(self.gridframe, from_=1900, to=2500,
                            textvariable=self.yv, width=7, bd=4)
-        #blank labels        
-        self.sLab1 = Label(self.datePane, text="    ", bg=self.bgcolor)
-        self.sLab2 = Label(self.datePane, text="    ", bg=self.bgcolor)
-
-        dateobs = [self.mob, self.sLab1, self.dob, self.sLab2, self.yob]
-        for ob in dateobs:
-            ob.pack(side=LEFT)
-            
-        self.datePane.grid(row=4, column=4, columnspan=2, sticky=W)
-
+        self.mob.grid(row=4, column=4, sticky=W)
+        self.dob.grid(row=4, column=4, sticky=E)
+        self.yob.grid(row=4, column=5)
 
         #Age
         self.agev = StringVar()
@@ -176,7 +168,7 @@ class allobjects:
                             bg=self.bgcolor).grid(row=4,column=6,sticky=W)
         self.avallabel = Label(self.gridframe, textvariable=self.agev,
                                font=('Helvetica',12),bg=self.bgcolor)\
-                               .grid(row=4,column=6,sticky=W)
+                               .grid(row=4,column=6,sticky=E)
 
         #Date Joined
         self.datejoinv = StringVar()
@@ -309,32 +301,30 @@ class allobjects:
         #Date Verified
         self.dverilabel = Label(self.gridframe, text='Last Verified: ',
                               font=('Helvetica',12),bg=self.bgcolor)\
-                              .grid(row=18,column=8,sticky=E)
+                              .grid(row=19,column=8, rowspan=2, sticky=E)
         self.mvv = StringVar()
         self.dvv = StringVar()
         self.yvv = StringVar()
         
-        self.datevPane = Frame(self.gridframe, bg=self.bgcolor)
         #for month entry
-        self.mov = ttk.Combobox(self.datevPane, width=12, state='readonly',
+        self.mov = ttk.Combobox(self.gridframe, width=10, state='readonly',
                                 values=self.month_li, textvariable=self.mvv)
         #self.mob.bind('<<ComboboxSelected>>', self.monthbox_select)
         
         #for day entry
-        self.dov = Spinbox(self.datevPane, from_=0, to=0,
+        self.dov = Spinbox(self.gridframe, from_=0, to=0,
                            textvariable=self.dvv, width=5, bd=4)
         #for year entry
-        self.yov = Spinbox(self.datevPane, from_=1900, to=2500,
+        self.yov = Spinbox(self.gridframe, from_=1900, to=2500,
                            textvariable=self.yvv, width=9, bd=4)
         #blank labels        
-        self.vLab1 = Label(self.datePane, text="    ", bg=self.bgcolor)
-        self.vLab2 = Label(self.datePane, text="    ", bg=self.bgcolor)
-
-        dateobs = [self.mov, self.vLab1, self.dov, self.vLab2, self.yov]
-        for ob in dateobs:
-            ob.pack(side=LEFT)
-            
-        self.datevPane.grid(row=18, column=9, columnspan=2, sticky=W)
+        self.vLab1 = Label(self.gridframe, text="    ", bg=self.bgcolor)
+        self.vLab2 = Label(self.gridframe, text="    ", bg=self.bgcolor)
+        self.mov.grid(row=19, column=9, rowspan=2, sticky=E)
+        self.vLab1.grid(row=19, column=10)
+        self.dov.grid(row=19, column=11, columnspan=2)
+        self.vLab2.grid(row=19, column=13)
+        self.yov.grid(row=19, column=14)
 
         #formatting labels/objects
         self.blankLab4 = Label(self.gridframe, text='   ',
