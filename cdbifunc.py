@@ -293,7 +293,13 @@ def update_vol(vol_id, firstname, lastname, phonenum):
 	"""
 	update_volunteer(s, vol_id, firstname, lastname, phonenum)
 	
-	
+
+def update_vis(vis_id, date, notes=None):
+        """This function will update a visit.
+        """
+        update_visit(s, vis_id, date, notes)
+        
+
 def reactivate_volunteer(Vol_ID):
 	"""This function reactivates a volunteer. The volunteer will now
 	reappear in lists and such.
@@ -366,7 +372,13 @@ def remove_household(I_ID):
 		
 	#remove all visits the household has made
 	delete_household(s, house.id)
-	
+
+
+def remove_visit(vis_id):
+        """This function deletes a single visit.
+        """
+        delete_visit(s, vis_id)
+
 	
 ####Functions for generating monthly/yearly reports####
 
@@ -384,3 +396,12 @@ def generate_yearly_report():
 	"""
 	duration = timedelta(days=365)
 	generate_report(s, duration)
+
+
+def generate_weekly_report():
+        """This function will generate a csv/excel file that holds
+        date about the households for the past 7 days. This will
+        include the number of new visitors, and the number of old
+        visitors.
+        """
+        pass
