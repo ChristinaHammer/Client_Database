@@ -75,11 +75,13 @@ class visitData:
 class visitDataReturn:
 	"""This class is used for returning data for the list_visits function.
 	"""
-	def __init__(self, visitDate, clientname, volname, notes=None):
+	def __init__(self, visitDate, clientname, volname, notes=None,
+			vid=None):
 		self.date = visitDate
 		self.visitor = clientname
 		self.volunteer = volname
 		self.notes = notes
+		self.visitID = vid
 		
 
 #functions for inserts	
@@ -160,6 +162,15 @@ def update_person(s, I_ID, firstname, lastname, dob, phonenum=None):
 	pers.age = age(dob)
 	s.commit()
 
+
+def update_visit(s, vis_id, date_of_visit=datetime.now(),
+				notes=None):
+        """This function will update a visit's record.
+        """
+        visit = s.query(Visit).filter(Visit.id == vis_id).one()
+        visit.date = date_of_visit
+        visit.visit_notes = notes
+        s.commit()
 	
 def update_volunteer(s, vol_id, firstname, lastname, phonenum):
 	"""This function will update a volunteer's records.
@@ -222,9 +233,8 @@ def age(dob):
 		else:
 			return timey.year - dob.year - 1		
 
-
 def list_visits(s, I_ID):
-	"""This function will find the past three visits for a household
+	"""This function will find the past visits for a household
 	and return them as a list of visitDataReturn objects.
 	"""
 	visits = []
@@ -233,19 +243,20 @@ def list_visits(s, I_ID):
 	
 	#returns all visits for the household in descending order of date
 	visithistory = s.query(Visit, Person, Volunteer).\
-				filter(Visit.HH_ID == house.id).\
-				filter(Visit.I_ID == Person.id).\
-				filter(Visit.Vol_ID == Volunteer.id).\
-				order_by(desc(Visit.date)).all()
+						filter(Visit.HH_ID == house.id).\
+						filter(Visit.I_ID == Person.id).\
+						filter(Visit.Vol_ID == Volunteer.id).\
+						order_by(desc(Visit.date)).all()
 	
 	#retrieves information for past three visits and returns in a list.
-	for instance in visithistory[0:3]:
+	for instance in visithistory:
 		clientname = instance.Person.first_name + " " +\
-				instance.Person.last_name
+						instance.Person.last_name
 		volname = instance.Volunteer.first_name + " " +\
-				instance.Volunteer.last_name
+						instance.Volunteer.last_name
 		visit = visitDataReturn(instance.Visit.date, clientname, volname, 
-					instance.Visit.visit_notes)
+					notes=instance.Visit.visit_notes,
+                                        vid=instance.Visit.id)
 		visits.append(visit)
 						
 	return visits
