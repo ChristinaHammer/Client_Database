@@ -21,6 +21,17 @@ from datetime import datetime, date, timedelta
 from cdbtabledef import Household, Person, Volunteer, Visit
 
 
+class volunteerData:
+        """This class is used for inserting/selecting a volunteer into/from
+        the database.
+        """
+        def __init__(self, firstname, lastname, phone=None, active=True):
+                self.firstname = str(firstname)
+                self.lastname = str(lastname)
+                self.phone = str(phone)
+                self.active = active
+
+
 class newClientData:
 	"""This class is used for inserting a new client into the
 	database.
