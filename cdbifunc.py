@@ -136,7 +136,16 @@ def list_vis():
 	for instance in s.query(Visit).order_by(Visit.date):
 		visits.append((instance.HH_ID, instance.id))
 	return visits
+	
 
+def select_volunteer(Vol_ID):
+        """This returns all volunteer information.
+        """
+        vol = s.query(Volunteer).filter(Volunteer.id == Vol_ID).one()
+        volreturn = volunteerData(firstname=vol.first_name, lastname=vol.last_name,
+                                  phone=vol.phone, active=vol.active)
+        return volreturn
+        
 
 def select_client(I_ID):
 	"""This a dictionary of objects containing all data for a selected
